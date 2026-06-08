@@ -1,0 +1,481 @@
+import { useState, useEffect, useRef } from 'react'
+import axios from 'axios'
+import toast from 'react-hot-toast'
+import {
+  BookOpen, Monitor, ClipboardList, Upload, FileText,
+  Trash2, Plus, X, Loader2, Eye, Image as ImageIcon,
+  Film, File
+} from 'lucide-react'
+
+const TABS = [
+  { id: 'resources', label: 'Upload Resources', icon: BookOpen },
+  { id: 'cbt', label: 'CBT Questions', icon: Monitor },
+  { id: 'assignments', label: 'Assignments', icon: ClipboardList },
+]
+
+const UPLOAD_TYPES = [
+  { value: 'document', label: 'Document', icon: File, accept: '.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt' },
+  { value: 'image', label: 'Image', icon: ImageIcon, accept: 'image/*' },
+  { value: 'video', label: 'Video', icon: Film, accept: 'video/*' },
+]
+
+const RESOURCE_CATEGORIES = [
+  { value: 'lecture-note', label: 'Lecture Note' },
+  { value: 'textbook', label: 'Textbook' },
+  { value: 'assignment', label: 'Assignment File' },
+  { value: 'other', label: 'Other' },
+]
+
+function CenteredSpinner() {
+  return <div className="flex items-center justify-center py-16"><Loader2 size={24} className="animate-spin text-[#1a3c5e]" /></div>
+}
+
+function ConfirmButton({ label, icon: Icon, onClick, className = '' }) {
+  const [confirming, setConfirming] = useState(false)
+  return confirming ? (
+    <div className="flex items-center gap-1">
+      <button onClick={() => { onClick(); setConfirming(false) }} className="text-xs px-2 py-1 bg-red-600 text-white rounded-lg font-medium">Confirm</button>
+      <button onClick={() => setConfirming(false)} className="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded-lg">Cancel</button>
+    </div>
+  ) : (
+    <button onClick={() => setConfirming(true)} className={className} title={label}><Icon size={15} /></button>
+  )
+}
+
+// ── Resources Tab ──────────────────────────────────────────────────────────────
+function ResourcesTab() {
+  const [resources, setResources] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [uploading, setUploading] = useState(false)
+  const [showForm, setShowForm] = useState(false)
+  const [uploadType, setUploadType] = useState('document')
+  const [form, setForm] = useState({ title: '', description: '', category: 'lecture-note' })
+  const [file, setFile] = useState(null)
+  const fileRef = useRef()
+
+  useEffect(() => {
+    axios.get('/api/admin/resources', { withCredentials: true })
+      .then(res => setResources((res.data.resources || []).filter(r => r.category !== 'past-question')))
+      .catch(() => toast.error('Failed to load resources.'))
+      .finally(() => setLoading(false))
+  }, [])
+
+  const handleUpload = async (e) => {
+    e.preventDefault()
+    if (!file) return toast.error('Please select a file.')
+    if (!form.title.trim()) return toast.error('Title is required.')
+    setUploading(true)
+    try {
+      const fd = new FormData()
+      fd.append('title', form.title)
+      fd.append('description', form.description)
+      fd.append('category', form.category)
+      fd.append('file', file)
+      const { data } = await axios.post('/api/admin/resources', fd, { withCredentials: true })
+      setResources(prev => [data.resource, ...prev])
+      setForm({ title: '', description: '', category: 'lecture-note' })
+      setFile(null); fileRef.current.value = ''
+      setShowForm(false)
+      toast.success('Resource uploaded!')
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Upload failed.')
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const deleteResource = async (id) => {
+    try {
+      await axios.delete(`/api/admin/resources/${id}`, { withCredentials: true })
+      setResources(prev => prev.filter(r => r._id !== id))
+      toast.success('Deleted.')
+    } catch { toast.error('Failed to delete.') }
+  }
+
+  if (loading) return <CenteredSpinner />
+
+  const currentAccept = UPLOAD_TYPES.find(t => t.value === uploadType)?.accept ?? ''
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-gray-500">{resources.length} resource{resources.length !== 1 ? 's' : ''}</p>
+        <button onClick={() => setShowForm(v => !v)} className="flex items-center gap-2 px-4 py-2 bg-[#1a3c5e] text-white text-sm rounded-xl hover:bg-[#162f4a] font-medium">
+          {showForm ? <><X size={15} /> Cancel</> : <><Plus size={15} /> Upload Resource</>}
+        </button>
+      </div>
+
+      {showForm && (
+        <form onSubmit={handleUpload} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-4">
+          <h3 className="font-semibold text-[#1a3c5e]">Upload Resource</h3>
+
+          {/* Upload type selector */}
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-2">File Type</label>
+            <div className="flex gap-2">
+              {UPLOAD_TYPES.map(t => (
+                <button key={t.value} type="button" onClick={() => { setUploadType(t.value); setFile(null); if (fileRef.current) fileRef.current.value = '' }}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium border transition ${uploadType === t.value ? 'bg-[#1a3c5e] text-white border-[#1a3c5e]' : 'bg-white text-gray-500 border-gray-200 hover:border-[#1a3c5e]/40'}`}>
+                  <t.icon size={14} /> {t.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1.5">Title *</label>
+              <input value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} placeholder="e.g. COM 301 Week 3 Notes"
+                className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#1a3c5e]/20 focus:border-[#1a3c5e]" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1.5">Category</label>
+              <select value={form.category} onChange={e => setForm(p => ({ ...p, category: e.target.value }))}
+                className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#1a3c5e]/20 focus:border-[#1a3c5e] bg-white">
+                {RESOURCE_CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+              </select>
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1.5">Description</label>
+            <textarea value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))}
+              placeholder="Brief description (optional)" rows={2}
+              className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#1a3c5e]/20 focus:border-[#1a3c5e] resize-none" />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1.5">File *</label>
+            <div onClick={() => fileRef.current?.click()} className="border-2 border-dashed border-gray-200 rounded-xl p-5 text-center cursor-pointer hover:border-[#1a3c5e]/40 hover:bg-gray-50 transition">
+              {file ? (
+                <div className="flex items-center justify-center gap-2 text-sm text-[#1a3c5e] font-medium">
+                  <FileText size={18} /><span className="truncate max-w-xs">{file.name}</span>
+                  <button type="button" onClick={e => { e.stopPropagation(); setFile(null); fileRef.current.value = '' }} className="text-gray-400 hover:text-red-400"><X size={15} /></button>
+                </div>
+              ) : (
+                <><Upload size={22} className="mx-auto mb-2 text-gray-300" /><p className="text-sm text-gray-400">Click to select {uploadType}</p></>
+              )}
+            </div>
+            <input ref={fileRef} type="file" accept={currentAccept} className="hidden" onChange={e => setFile(e.target.files[0] || null)} />
+          </div>
+          <button type="submit" disabled={uploading} className="flex items-center gap-2 px-5 py-2.5 bg-[#1a3c5e] text-white text-sm rounded-xl hover:bg-[#162f4a] font-medium disabled:opacity-60">
+            {uploading ? <><Loader2 size={15} className="animate-spin" /> Uploading...</> : <><Upload size={15} /> Upload</>}
+          </button>
+        </form>
+      )}
+
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        {resources.length === 0 ? (
+          <div className="p-10 text-center"><BookOpen size={32} className="mx-auto mb-3 text-gray-200" /><p className="text-gray-400 text-sm">No resources uploaded yet.</p></div>
+        ) : (
+          <div className="divide-y divide-gray-50">
+            {resources.map(r => (
+              <div key={r._id} className="flex items-center gap-4 px-5 py-4 hover:bg-gray-50/50">
+                <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center flex-shrink-0"><FileText size={18} className="text-amber-500" /></div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-gray-800 text-sm truncate">{r.title}</p>
+                  <p className="text-xs text-gray-400">{r.category} · {new Date(r.createdAt).toLocaleDateString()}</p>
+                </div>
+                <div className="flex gap-2 flex-shrink-0">
+                  <a href={r.fileUrl} target="_blank" rel="noopener noreferrer" className="p-1.5 text-blue-400 hover:bg-blue-50 rounded-lg"><Eye size={15} /></a>
+                  <ConfirmButton label="Delete" icon={Trash2} onClick={() => deleteResource(r._id)} className="p-1.5 text-red-400 hover:bg-red-50 rounded-lg" />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ── CBT Questions Tab ──────────────────────────────────────────────────────────
+function CBTTab() {
+  const [questions, setQuestions] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [showForm, setShowForm] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [form, setForm] = useState({ course: '', question: '', optionA: '', optionB: '', optionC: '', optionD: '', correctAnswer: 'A', explanation: '' })
+
+  useEffect(() => {
+    axios.get('/api/admin/cbt', { withCredentials: true })
+      .then(res => setQuestions(res.data.questions || []))
+      .catch(() => toast.error('Failed to load questions.'))
+      .finally(() => setLoading(false))
+  }, [])
+
+  const handleSave = async (e) => {
+    e.preventDefault()
+    const { course, question, optionA, optionB, optionC, optionD, correctAnswer } = form
+    if (!course || !question || !optionA || !optionB || !optionC || !optionD) return toast.error('Please fill all fields.')
+    setSaving(true)
+    try {
+      const { data } = await axios.post('/api/admin/cbt', form, { withCredentials: true })
+      setQuestions(prev => [...prev, data.question])
+      setForm({ course: '', question: '', optionA: '', optionB: '', optionC: '', optionD: '', correctAnswer: 'A', explanation: '' })
+      setShowForm(false)
+      toast.success('Question saved!')
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to save.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const deleteQ = async (id) => {
+    try {
+      await axios.delete(`/api/admin/cbt/${id}`, { withCredentials: true })
+      setQuestions(prev => prev.filter(q => q._id !== id))
+      toast.success('Deleted.')
+    } catch { toast.error('Failed.') }
+  }
+
+  if (loading) return <CenteredSpinner />
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-gray-500">{questions.length} question{questions.length !== 1 ? 's' : ''}</p>
+        <button onClick={() => setShowForm(v => !v)} className="flex items-center gap-2 px-4 py-2 bg-[#1a3c5e] text-white text-sm rounded-xl hover:bg-[#162f4a] font-medium">
+          {showForm ? <><X size={15} /> Cancel</> : <><Plus size={15} /> Add Question</>}
+        </button>
+      </div>
+
+      {showForm && (
+        <form onSubmit={handleSave} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-4">
+          <h3 className="font-semibold text-[#1a3c5e]">New CBT Question</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1.5">Course *</label>
+              <input value={form.course} onChange={e => setForm(p => ({ ...p, course: e.target.value }))} placeholder="e.g. COM 301 — Media Ethics"
+                className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#1a3c5e]/20 focus:border-[#1a3c5e]" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1.5">Correct Answer *</label>
+              <select value={form.correctAnswer} onChange={e => setForm(p => ({ ...p, correctAnswer: e.target.value }))}
+                className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#1a3c5e]/20 focus:border-[#1a3c5e] bg-white">
+                {['A', 'B', 'C', 'D'].map(o => <option key={o} value={o}>Option {o}</option>)}
+              </select>
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1.5">Question *</label>
+            <textarea value={form.question} onChange={e => setForm(p => ({ ...p, question: e.target.value }))} placeholder="Type the question here..." rows={3}
+              className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#1a3c5e]/20 focus:border-[#1a3c5e] resize-none" />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {['A', 'B', 'C', 'D'].map(opt => (
+              <div key={opt}>
+                <label className={`block text-xs font-medium mb-1.5 ${form.correctAnswer === opt ? 'text-green-600' : 'text-gray-600'}`}>
+                  Option {opt} {form.correctAnswer === opt && '✓ (correct)'}
+                </label>
+                <input value={form[`option${opt}`]} onChange={e => setForm(p => ({ ...p, [`option${opt}`]: e.target.value }))} placeholder={`Option ${opt}...`}
+                  className={`w-full px-3 py-2.5 text-sm border rounded-xl focus:outline-none focus:ring-2 focus:border-[#1a3c5e] ${form.correctAnswer === opt ? 'border-green-300 focus:ring-green-200' : 'border-gray-200 focus:ring-[#1a3c5e]/20'}`} />
+              </div>
+            ))}
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1.5">Explanation (optional)</label>
+            <input value={form.explanation} onChange={e => setForm(p => ({ ...p, explanation: e.target.value }))} placeholder="Brief explanation of the correct answer..."
+              className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#1a3c5e]/20 focus:border-[#1a3c5e]" />
+          </div>
+          <button type="submit" disabled={saving} className="flex items-center gap-2 px-5 py-2.5 bg-[#1a3c5e] text-white text-sm rounded-xl hover:bg-[#162f4a] font-medium disabled:opacity-60">
+            {saving ? <><Loader2 size={15} className="animate-spin" /> Saving...</> : 'Save Question'}
+          </button>
+        </form>
+      )}
+
+      {questions.length === 0 ? (
+        <div className="bg-white rounded-2xl border border-gray-100 p-10 text-center shadow-sm"><Monitor size={32} className="mx-auto mb-3 text-gray-200" /><p className="text-gray-400 text-sm">No questions yet. Add the first one!</p></div>
+      ) : (
+        <div className="space-y-2">
+          {Object.entries(questions.reduce((acc, q) => { (acc[q.course] = acc[q.course] || []).push(q); return acc }, {})).map(([course, qs]) => (
+            <div key={course} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+              <div className="px-5 py-3 bg-gray-50 border-b border-gray-100 flex items-center justify-between">
+                <h4 className="font-semibold text-[#1a3c5e] text-sm">{course}</h4>
+                <span className="text-xs text-gray-400">{qs.length} question{qs.length !== 1 ? 's' : ''}</span>
+              </div>
+              <div className="divide-y divide-gray-50">
+                {qs.map((q, i) => (
+                  <div key={q._id} className="flex items-start gap-3 px-5 py-3 hover:bg-gray-50/50">
+                    <span className="text-xs text-amber-500 font-bold mt-0.5 flex-shrink-0">Q{i + 1}</span>
+                    <p className="text-sm text-gray-700 flex-1 line-clamp-2">{q.question}</p>
+                    <span className="text-xs bg-green-50 text-green-600 px-1.5 py-0.5 rounded font-bold flex-shrink-0">{q.correctAnswer}</span>
+                    <ConfirmButton label="Delete" icon={Trash2} onClick={() => deleteQ(q._id)} className="p-1 text-red-400 hover:bg-red-50 rounded flex-shrink-0" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Assignments Tab ────────────────────────────────────────────────────────────
+function AssignmentsTab() {
+  const [assignments, setAssignments] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [showForm, setShowForm] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [form, setForm] = useState({ title: '', course: '', description: '', dueDate: '' })
+  const [file, setFile] = useState(null)
+  const fileRef = useRef()
+  const [uploadType, setUploadType] = useState('document')
+
+  useEffect(() => {
+    axios.get('/api/admin/assignments', { withCredentials: true })
+      .then(res => setAssignments(res.data.assignments || []))
+      .catch(() => toast.error('Failed to load assignments.'))
+      .finally(() => setLoading(false))
+  }, [])
+
+  const handleSave = async (e) => {
+    e.preventDefault()
+    const { title, course, description, dueDate } = form
+    if (!title || !course || !description || !dueDate) return toast.error('All fields are required.')
+    setSaving(true)
+    try {
+      const fd = new FormData()
+      Object.entries(form).forEach(([k, v]) => fd.append(k, v))
+      if (file) fd.append('file', file)
+      const { data } = await axios.post('/api/admin/assignments', fd, { withCredentials: true })
+      setAssignments(prev => [...prev, data.assignment])
+      setForm({ title: '', course: '', description: '', dueDate: '' })
+      setFile(null); if (fileRef.current) fileRef.current.value = ''
+      setShowForm(false)
+      toast.success('Assignment posted!')
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const deleteA = async (id) => {
+    try {
+      await axios.delete(`/api/admin/assignments/${id}`, { withCredentials: true })
+      setAssignments(prev => prev.filter(a => a._id !== id))
+      toast.success('Deleted.')
+    } catch { toast.error('Failed.') }
+  }
+
+  if (loading) return <CenteredSpinner />
+
+  const currentAccept = UPLOAD_TYPES.find(t => t.value === uploadType)?.accept ?? ''
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-gray-500">{assignments.length} assignment{assignments.length !== 1 ? 's' : ''}</p>
+        <button onClick={() => setShowForm(v => !v)} className="flex items-center gap-2 px-4 py-2 bg-[#1a3c5e] text-white text-sm rounded-xl hover:bg-[#162f4a] font-medium">
+          {showForm ? <><X size={15} /> Cancel</> : <><Plus size={15} /> New Assignment</>}
+        </button>
+      </div>
+
+      {showForm && (
+        <form onSubmit={handleSave} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-4">
+          <h3 className="font-semibold text-[#1a3c5e]">Post Assignment</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1.5">Title *</label>
+              <input value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} placeholder="Assignment title"
+                className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#1a3c5e]/20 focus:border-[#1a3c5e]" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1.5">Course *</label>
+              <input value={form.course} onChange={e => setForm(p => ({ ...p, course: e.target.value }))} placeholder="e.g. COM 301"
+                className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#1a3c5e]/20 focus:border-[#1a3c5e]" />
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1.5">Description / Instructions *</label>
+            <textarea value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} rows={3} placeholder="Describe the assignment..."
+              className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#1a3c5e]/20 focus:border-[#1a3c5e] resize-none" />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1.5">Due Date *</label>
+            <input type="datetime-local" value={form.dueDate} onChange={e => setForm(p => ({ ...p, dueDate: e.target.value }))}
+              className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#1a3c5e]/20 focus:border-[#1a3c5e]" />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-2">Attachment (optional)</label>
+            <div className="flex gap-2 mb-2">
+              {UPLOAD_TYPES.map(t => (
+                <button key={t.value} type="button" onClick={() => { setUploadType(t.value); setFile(null); if (fileRef.current) fileRef.current.value = '' }}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition ${uploadType === t.value ? 'bg-[#1a3c5e] text-white border-[#1a3c5e]' : 'bg-white text-gray-500 border-gray-200'}`}>
+                  <t.icon size={12} /> {t.label}
+                </button>
+              ))}
+            </div>
+            <div onClick={() => fileRef.current?.click()} className="border-2 border-dashed border-gray-200 rounded-xl p-4 text-center cursor-pointer hover:border-[#1a3c5e]/40 hover:bg-gray-50 transition">
+              {file ? (
+                <div className="flex items-center justify-center gap-2 text-sm text-[#1a3c5e]">
+                  <FileText size={16} />{file.name}
+                  <button type="button" onClick={e => { e.stopPropagation(); setFile(null); fileRef.current.value = '' }}><X size={13} className="text-gray-400" /></button>
+                </div>
+              ) : <p className="text-sm text-gray-400">Click to attach file (optional)</p>}
+            </div>
+            <input ref={fileRef} type="file" accept={currentAccept} className="hidden" onChange={e => setFile(e.target.files[0] || null)} />
+          </div>
+          <button type="submit" disabled={saving} className="flex items-center gap-2 px-5 py-2.5 bg-[#1a3c5e] text-white text-sm rounded-xl hover:bg-[#162f4a] font-medium disabled:opacity-60">
+            {saving ? <><Loader2 size={15} className="animate-spin" /> Posting...</> : 'Post Assignment'}
+          </button>
+        </form>
+      )}
+
+      {assignments.length === 0 ? (
+        <div className="bg-white rounded-2xl border border-gray-100 p-10 text-center shadow-sm"><ClipboardList size={32} className="mx-auto mb-3 text-gray-200" /><p className="text-gray-400 text-sm">No assignments posted yet.</p></div>
+      ) : (
+        <div className="space-y-3">
+          {assignments.map(a => {
+            const overdue = new Date(a.dueDate) < new Date()
+            return (
+              <div key={a._id} className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm flex gap-4">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className="font-semibold text-[#1a3c5e] text-sm">{a.title}</h3>
+                    <span className="text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">{a.course}</span>
+                    {overdue && <span className="text-xs bg-red-50 text-red-500 px-2 py-0.5 rounded-full">Overdue</span>}
+                  </div>
+                  <p className="text-xs text-gray-500 line-clamp-2 mb-1">{a.description}</p>
+                  <p className="text-xs text-gray-400">Due: {new Date(a.dueDate).toLocaleString()}</p>
+                </div>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  {a.fileUrl && <a href={a.fileUrl} target="_blank" rel="noopener noreferrer" className="p-1.5 text-blue-400 hover:bg-blue-50 rounded-lg"><Eye size={15} /></a>}
+                  <ConfirmButton label="Delete" icon={Trash2} onClick={() => deleteA(a._id)} className="p-1.5 text-red-400 hover:bg-red-50 rounded-lg" />
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Main Staff Panel ───────────────────────────────────────────────────────────
+export default function StaffPanel() {
+  const [activeTab, setActiveTab] = useState('resources')
+
+  return (
+    <div className="space-y-5">
+      <div>
+        <h1 className="text-2xl font-bold text-[#1a3c5e]">Staff Panel</h1>
+        <p className="text-gray-500 text-sm mt-1">Upload resources, set CBT questions and post assignments</p>
+      </div>
+
+      <div className="flex gap-1 bg-white border border-gray-100 rounded-2xl p-1 shadow-sm w-fit flex-wrap">
+        {TABS.map(tab => (
+          <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${activeTab === tab.id ? 'bg-[#1a3c5e] text-white shadow-sm' : 'text-gray-500 hover:text-[#1a3c5e] hover:bg-gray-50'}`}>
+            <tab.icon size={15} /><span className="hidden sm:inline">{tab.label}</span>
+          </button>
+        ))}
+      </div>
+
+      {activeTab === 'resources' && <ResourcesTab />}
+      {activeTab === 'cbt' && <CBTTab />}
+      {activeTab === 'assignments' && <AssignmentsTab />}
+    </div>
+  )
+}
