@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import axios from 'axios'
 import toast from 'react-hot-toast'
 import { useAuth } from '../context/AuthContext'
-import SignInPrompt from '../components/SignInPrompt'
+import SignInPrompt from '../Components/SignInPrompt'
 import { Loader2, User } from 'lucide-react'
 
 export default function FinalYearSpotlight() {

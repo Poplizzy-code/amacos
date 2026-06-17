@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import axios from 'axios'
-import FilterStudio from '../components/FilterStudio'
+import FilterStudio from '../Components/FilterStudio'
 import toast from 'react-hot-toast'
 import { useAuth } from '../context/AuthContext'
-import SignInPrompt from '../components/SignInPrompt'
+import SignInPrompt from '../Components/SignInPrompt'
 import {
   Heart, MessageCircle, Bookmark, MoreHorizontal, X,
   Globe, Lock, Loader2, Image as ImageIcon, Plus,

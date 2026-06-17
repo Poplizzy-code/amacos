@@ -1,5 +1,5 @@
 import React from 'react'
-import FilterStudio from '../components/FilterStudio'
+import FilterStudio from '../Components/FilterStudio'
 
 export default function Filters() {
   return (

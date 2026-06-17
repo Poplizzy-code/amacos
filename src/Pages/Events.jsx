@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 import { useAuth } from '../context/AuthContext'
-import SignInPrompt from '../components/SignInPrompt'
+import SignInPrompt from '../Components/SignInPrompt'
 import { Calendar, Clock, MapPin, Image as ImageIcon } from 'lucide-react'
 
 const fmtDate = (iso) => new Date(iso).toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'long', day: 'numeric' })
