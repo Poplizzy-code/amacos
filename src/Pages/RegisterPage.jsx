@@ -1,12 +1,11 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import toast from 'react-hot-toast'
 import { Eye, EyeOff, BookOpen, GraduationCap, Users, Lock } from 'lucide-react'
 
 export default function RegisterPage() {
   const { register } = useAuth()
-  const navigate = useNavigate()
   const [accountType, setAccountType] = useState('student')
   const [form, setForm] = useState({ fullName: '', email: '', password: '', matricNumber: '', level: '100', staffCode: '' })
   const [showPass, setShowPass] = useState(false)
@@ -23,7 +22,7 @@ export default function RegisterPage() {
     try {
       await register({ ...form, accountType })
       toast.success('Account created! Welcome to AMACOS.')
-      navigate('/app/dashboard')
+      // route guard in App.jsx handles the redirect once user state updates
     } catch (err) {
       toast.error(err.response?.data?.message || 'Registration failed.')
     } finally {
@@ -36,23 +35,47 @@ export default function RegisterPage() {
   return (
     <div className="min-h-screen flex">
       {/* Left panel */}
-      <div className="hidden lg:flex w-1/2 bg-[#1a3c5e] flex-col justify-between p-12 text-white">
-        <div className="flex items-center gap-3">
-          <BookOpen size={28} className="text-amber-400" />
+      <div className="hidden lg:flex w-1/2 flex-col justify-between p-12 text-white relative overflow-hidden"
+        style={{ background: 'linear-gradient(145deg, #0d2137 0%, #1a3c5e 50%, #1e4976 100%)' }}>
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-0 right-0 w-96 h-96 rounded-full opacity-20"
+            style={{ background: 'radial-gradient(circle, #3b82f6 0%, transparent 70%)', transform: 'translate(30%, -30%)' }} />
+          <div className="absolute bottom-0 left-0 w-80 h-80 rounded-full opacity-15"
+            style={{ background: 'radial-gradient(circle, #fbbf24 0%, transparent 70%)', transform: 'translate(-30%, 30%)' }} />
+          <div className="absolute inset-0 opacity-[0.04]" style={{
+            backgroundImage: 'linear-gradient(rgba(255,255,255,1) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,1) 1px,transparent 1px)',
+            backgroundSize: '40px 40px',
+          }} />
+        </div>
+        <div className="relative flex items-center gap-3">
+          <div className="w-10 h-10 bg-amber-400 rounded-xl flex items-center justify-center shadow-lg">
+            <BookOpen size={20} className="text-[#1a3c5e]" />
+          </div>
           <span className="text-xl font-semibold tracking-wide">AMACOS</span>
         </div>
-        <div>
+        <div className="relative">
+          <div className="inline-flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-full mb-5">
+            <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+            <span className="text-blue-200 text-xs font-medium">Join hundreds of Mass Comm students</span>
+          </div>
           <h1 className="text-5xl font-display leading-tight mb-4">
             Join the<br />
             <span className="text-amber-400">AMACOS Community</span>
           </h1>
           <p className="text-blue-200 text-lg">Access past questions, resources, CBT, forums, and the tech community.</p>
         </div>
-        <p className="text-blue-300 text-sm">© 2025 AMACOS. Adeleke University.</p>
+        <p className="relative text-blue-400 text-sm">© 2025 AMACOS. Adeleke University.</p>
       </div>
 
       {/* Right panel */}
-      <div className="flex-1 flex items-center justify-center px-6 py-12 bg-white overflow-y-auto">
+      <div className="flex-1 flex items-center justify-center px-6 py-12 overflow-y-auto relative"
+        style={{ background: 'linear-gradient(145deg, #f0f5fb 0%, #e8eef8 50%, #f4f8ff 100%)' }}>
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute -top-32 -right-32 w-96 h-96 rounded-full opacity-40"
+            style={{ background: 'radial-gradient(circle, #dbeafe 0%, transparent 70%)' }} />
+          <div className="absolute -bottom-24 -left-24 w-80 h-80 rounded-full opacity-30"
+            style={{ background: 'radial-gradient(circle, #bfdbfe 0%, transparent 70%)' }} />
+        </div>
         <div className="w-full max-w-md">
           <div className="lg:hidden flex items-center gap-2 mb-8">
             <BookOpen size={22} className="text-[#1a3c5e]" />
@@ -156,7 +179,7 @@ export default function RegisterPage() {
             </div>
 
             <button type="submit" disabled={loading}
-              className="w-full bg-[#1a3c5e] hover:bg-[#15324f] text-white py-3 rounded-xl font-medium text-sm transition disabled:opacity-60 mt-2">
+              className="w-full bg-[#1a3c5e] hover:bg-[#15324f] text-white py-3 rounded-xl font-medium text-sm transition disabled:opacity-60 mt-2 shadow-lg shadow-[#1a3c5e]/25">
               {loading ? 'Creating account...' : `Create ${isStaff ? 'Staff' : 'Student'} Account`}
             </button>
           </form>

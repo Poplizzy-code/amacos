@@ -45,7 +45,6 @@ function WelcomeGraphic() {
 function StudyGraphic() {
   return (
     <div className="relative" style={{ width: 260, height: 240 }}>
-      {/* Back card */}
       <div className="absolute rounded-2xl border border-white/10"
         style={{ width: 200, height: 128, top: 8, left: 28, transform: 'rotate(-8deg)', background: 'rgba(255,255,255,0.04)' }}>
         <div className="p-4 space-y-2.5">
@@ -54,7 +53,6 @@ function StudyGraphic() {
           <div className="h-2.5 rounded bg-white/10 w-2/3" />
         </div>
       </div>
-      {/* Mid card - CBT */}
       <div className="absolute rounded-2xl border border-white/15 shadow-lg"
         style={{ width: 200, height: 128, top: 50, left: 8, transform: 'rotate(-3deg)', background: 'rgba(255,255,255,0.07)' }}>
         <div className="p-4">
@@ -68,7 +66,6 @@ function StudyGraphic() {
           <span className="text-green-400 text-xs mt-2 block">68% complete</span>
         </div>
       </div>
-      {/* Front card - Past Questions */}
       <div className="absolute rounded-2xl shadow-xl border border-blue-400/20"
         style={{ width: 200, height: 128, top: 100, left: 28, background: 'linear-gradient(135deg,#1a3c5e,#2563a8)' }}>
         <div className="p-4">
@@ -175,9 +172,11 @@ function ExploreGraphic() {
 }
 
 // ── Slide definitions ──────────────────────────────────────────────────────────
+// enterFrom: direction the TEXT enters from. Graphic enters from the opposite.
 
 const slides = [
   {
+    enterFrom: 'Left',
     Graphic: WelcomeGraphic,
     tag: 'Mass Communication Dept · Adeleke University',
     line1: 'Welcome to',
@@ -188,6 +187,7 @@ const slides = [
     isCta: false,
   },
   {
+    enterFrom: 'Top',
     Graphic: StudyGraphic,
     tag: 'Study & Learn',
     line1: 'Study Smarter,',
@@ -203,6 +203,7 @@ const slides = [
     isCta: false,
   },
   {
+    enterFrom: 'Right',
     Graphic: CommunityGraphic,
     tag: 'Community',
     line1: 'A Community That',
@@ -218,6 +219,7 @@ const slides = [
     isCta: false,
   },
   {
+    enterFrom: 'Bottom',
     Graphic: NewsGraphic,
     tag: 'Stay Informed',
     line1: 'Never Miss',
@@ -233,6 +235,7 @@ const slides = [
     isCta: false,
   },
   {
+    enterFrom: 'Left',
     Graphic: ExploreGraphic,
     tag: 'Get Started',
     line1: 'Ready to',
@@ -244,23 +247,62 @@ const slides = [
   },
 ]
 
+const opposite = { Left: 'Right', Right: 'Left', Top: 'Bottom', Bottom: 'Top' }
+
 // ── Main ───────────────────────────────────────────────────────────────────────
 
 export default function LandingPage() {
   const [current, setCurrent] = useState(0)
+  const [animKey, setAnimKey] = useState(0)
   const total = slides.length
+
+  const goTo = (idx) => {
+    setCurrent(idx)
+    setAnimKey(k => k + 1)
+  }
 
   useEffect(() => {
     if (current === total - 1) return
-    const t = setInterval(() => setCurrent(c => (c + 1) % total), 6000)
+    const t = setInterval(() => {
+      setCurrent(c => (c + 1) % total)
+      setAnimKey(k => k + 1)
+    }, 6000)
     return () => clearInterval(t)
   }, [current, total])
 
-  const prev = () => setCurrent(c => (c - 1 + total) % total)
-  const next = () => setCurrent(c => (c + 1) % total)
+  const prev = () => goTo((current - 1 + total) % total)
+  const next = () => goTo((current + 1) % total)
 
   return (
     <div className="h-screen flex flex-col bg-[#060d1a] overflow-hidden">
+
+      {/* CSS keyframes for directional slide animations */}
+      <style>{`
+        @keyframes slideFromLeft {
+          0%   { opacity: 0; transform: translateX(-90px) scale(0.96); }
+          100% { opacity: 1; transform: translateX(0) scale(1); }
+        }
+        @keyframes slideFromRight {
+          0%   { opacity: 0; transform: translateX(90px) scale(0.96); }
+          100% { opacity: 1; transform: translateX(0) scale(1); }
+        }
+        @keyframes slideFromTop {
+          0%   { opacity: 0; transform: translateY(-90px) scale(0.96); }
+          100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes slideFromBottom {
+          0%   { opacity: 0; transform: translateY(90px) scale(0.96); }
+          100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes itemReveal {
+          0%   { opacity: 0; transform: translateY(18px); }
+          100% { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes dotPulse {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(251,191,36,0.5); }
+          50%       { box-shadow: 0 0 0 6px rgba(251,191,36,0); }
+        }
+      `}</style>
 
       {/* Background orbs */}
       <div className="fixed inset-0 pointer-events-none select-none z-0">
@@ -297,84 +339,130 @@ export default function LandingPage() {
         </div>
       </nav>
 
-      {/* Slides viewport */}
+      {/* Slides viewport — absolute stacked */}
       <div className="relative z-10 flex-1 overflow-hidden">
-        <div
-          className="flex h-full"
-          style={{
-            width: `${total * 100}%`,
-            transform: `translateX(-${current * (100 / total)}%)`,
-            transition: 'transform 0.65s cubic-bezier(0.4, 0, 0.2, 1)',
-          }}>
-          {slides.map(({ Graphic, tag, line1, line2, amber, sub, features, isCta }, i) => (
-            <div key={i}
-              className="h-full flex items-center justify-center px-6 sm:px-10 lg:px-20"
-              style={{ width: `${100 / total}%` }}>
-              <div className={`w-full max-w-5xl flex flex-col gap-8 items-center ${isCta ? '' : 'lg:flex-row lg:gap-16'}`}>
+        {slides.map(({ enterFrom, Graphic, tag, line1, line2, amber, sub, features, isCta }, i) => {
+          const isActive = i === current
+          const textAnim  = `slideFrom${enterFrom} 0.75s cubic-bezier(0.16, 1, 0.3, 1) both`
+          const graphAnim = `slideFrom${opposite[enterFrom]} 0.75s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both`
 
-                {/* Text */}
-                <div className={`flex-1 text-center ${isCta ? '' : 'lg:text-left'} min-w-0`}>
-                  <div className="inline-flex items-center gap-2 glass px-3 py-1.5 rounded-full mb-5">
-                    <Sparkles size={11} className="text-amber-400" />
-                    <span className="text-blue-200 text-xs font-medium">{tag}</span>
-                    <Sparkles size={11} className="text-amber-400" />
+          return (
+            <div
+              key={i}
+              style={{
+                position: 'absolute',
+                inset: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '0 24px',
+                opacity: isActive ? 1 : 0,
+                pointerEvents: isActive ? 'auto' : 'none',
+                transition: 'opacity 0.35s ease',
+              }}
+            >
+              {isActive && (
+                <div className={`w-full max-w-5xl flex flex-col gap-8 items-center ${isCta ? '' : 'lg:flex-row lg:gap-16'}`}>
+
+                  {/* Text block */}
+                  <div
+                    key={`text-${animKey}`}
+                    className={`flex-1 text-center ${isCta ? '' : 'lg:text-left'} min-w-0`}
+                    style={{ animation: textAnim }}
+                  >
+                    <div
+                      className="inline-flex items-center gap-2 glass px-3 py-1.5 rounded-full mb-5"
+                      style={{ animation: 'itemReveal 0.5s ease 0.1s both' }}
+                    >
+                      <Sparkles size={11} className="text-amber-400" />
+                      <span className="text-blue-200 text-xs font-medium">{tag}</span>
+                      <Sparkles size={11} className="text-amber-400" />
+                    </div>
+
+                    <h1
+                      className="font-display font-black text-white leading-[1.05] tracking-tight mb-4 text-4xl sm:text-5xl lg:text-6xl"
+                      style={{ animation: 'itemReveal 0.5s ease 0.2s both' }}
+                    >
+                      {line1}<br />
+                      <span className={amber ? 'text-gradient-amber' : 'text-white'}>{line2}</span>
+                    </h1>
+
+                    <p
+                      className="text-blue-300 text-base lg:text-lg leading-relaxed mb-6 max-w-md mx-auto lg:mx-0"
+                      style={{ animation: 'itemReveal 0.5s ease 0.3s both' }}
+                    >
+                      {sub}
+                    </p>
+
+                    {features && (
+                      <div
+                        className="flex flex-wrap gap-2 justify-center lg:justify-start"
+                        style={{ animation: 'itemReveal 0.5s ease 0.4s both' }}
+                      >
+                        {features.map(({ Icon, label }) => (
+                          <span key={label}
+                            className="inline-flex items-center gap-1.5 glass px-3 py-1.5 rounded-full text-xs text-blue-200 font-medium">
+                            <Icon size={11} className="text-amber-400" /> {label}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    {isCta && (
+                      <>
+                        <style>{`
+                          @keyframes ctaPop {
+                            0%, 100% { transform: scale(1); }
+                            50% { transform: scale(1.07); }
+                          }
+                          .cta-pop { animation: ctaPop 1.8s ease-in-out infinite; }
+                          .cta-pop:hover { animation: none; transform: scale(1.04); }
+                        `}</style>
+                        <div
+                          className="flex flex-col sm:flex-row gap-3 justify-center mt-2"
+                          style={{ animation: 'itemReveal 0.5s ease 0.4s both' }}
+                        >
+                          <Link to="/explore"
+                            className="cta-pop inline-flex items-center justify-center gap-2 bg-white text-[#0d1f35] font-bold px-8 py-4 rounded-2xl shadow-xl text-base"
+                            style={{ animationDelay: '0s' }}>
+                            <Globe size={18} /> Explore Now
+                          </Link>
+                          <Link to="/register"
+                            className="cta-pop inline-flex items-center justify-center gap-2 bg-amber-400 text-[#0d1f35] font-bold px-8 py-4 rounded-2xl shadow-xl shadow-amber-500/25 text-base"
+                            style={{ animationDelay: '0.9s' }}>
+                            Join AMACOS <ArrowRight size={18} />
+                          </Link>
+                        </div>
+                      </>
+                    )}
                   </div>
 
-                  <h1 className="font-display font-black text-white leading-[1.05] tracking-tight mb-4 text-4xl sm:text-5xl lg:text-6xl">
-                    {line1}<br />
-                    <span className={amber ? 'text-gradient-amber' : 'text-white'}>{line2}</span>
-                  </h1>
-
-                  <p className="text-blue-300 text-base lg:text-lg leading-relaxed mb-6 max-w-md mx-auto lg:mx-0">
-                    {sub}
-                  </p>
-
-                  {features && (
-                    <div className="flex flex-wrap gap-2 justify-center lg:justify-start">
-                      {features.map(({ Icon, label }) => (
-                        <span key={label}
-                          className="inline-flex items-center gap-1.5 glass px-3 py-1.5 rounded-full text-xs text-blue-200 font-medium">
-                          <Icon size={11} className="text-amber-400" /> {label}
-                        </span>
-                      ))}
+                  {/* Graphic — desktop only */}
+                  {!isCta && (
+                    <div
+                      key={`graphic-${animKey}`}
+                      className="hidden lg:flex flex-shrink-0 items-center justify-center"
+                      style={{ animation: graphAnim }}
+                    >
+                      <Graphic />
                     </div>
                   )}
 
                   {isCta && (
-                    <>
-                      <style>{`
-                        @keyframes ctaPop {
-                          0%, 100% { transform: scale(1); }
-                          50% { transform: scale(1.07); }
-                        }
-                        .cta-pop { animation: ctaPop 1.8s ease-in-out infinite; }
-                        .cta-pop:hover { animation: none; transform: scale(1.04); }
-                      `}</style>
-                      <div className="flex flex-col sm:flex-row gap-3 justify-center mt-2">
-                      <Link to="/explore"
-                        className="cta-pop inline-flex items-center justify-center gap-2 bg-white text-[#0d1f35] font-bold px-8 py-4 rounded-2xl shadow-xl text-base"
-                        style={{ animationDelay: '0s' }}>
-                        <Globe size={18} /> Explore Now
-                      </Link>
-                      <Link to="/register"
-                        className="cta-pop inline-flex items-center justify-center gap-2 bg-amber-400 text-[#0d1f35] font-bold px-8 py-4 rounded-2xl shadow-xl shadow-amber-500/25 text-base"
-                        style={{ animationDelay: '0.9s' }}>
-                        Join AMACOS <ArrowRight size={18} />
-                      </Link>
+                    <div
+                      key={`graphic-cta-${animKey}`}
+                      className="hidden lg:flex flex-shrink-0 items-center justify-center"
+                      style={{ animation: textAnim }}
+                    >
+                      <Graphic />
                     </div>
-                    </>
                   )}
-                </div>
 
-                {/* Graphic — desktop only */}
-                <div className="hidden lg:flex flex-shrink-0 items-center justify-center">
-                  <Graphic />
                 </div>
-
-              </div>
+              )}
             </div>
-          ))}
-        </div>
+          )
+        })}
       </div>
 
       {/* Slide controls */}
@@ -385,12 +473,13 @@ export default function LandingPage() {
         </button>
         <div className="flex items-center gap-2">
           {slides.map((_, i) => (
-            <button key={i} onClick={() => setCurrent(i)}
+            <button key={i} onClick={() => goTo(i)}
               className="rounded-full transition-all duration-300"
               style={{
                 width: i === current ? '28px' : '8px',
                 height: '8px',
                 background: i === current ? '#fbbf24' : 'rgba(255,255,255,0.2)',
+                animation: i === current ? 'dotPulse 2s ease-in-out infinite' : 'none',
               }} />
           ))}
         </div>
