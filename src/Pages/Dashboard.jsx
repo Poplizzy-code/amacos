@@ -38,10 +38,10 @@ export default function Dashboard() {
         {quickLinks.map((item) => (
           <Link key={item.path} to={item.path}
             className="bg-white rounded-2xl p-4 border border-gray-100 hover:shadow-md transition flex items-center gap-3">
-            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${item.color}`}>
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${item.color}`}>
               <item.icon size={18} />
             </div>
-            <span className="font-medium text-gray-700 text-sm">{item.label}</span>
+            <span className="font-medium text-gray-700 text-sm leading-tight min-w-0">{item.label}</span>
           </Link>
         ))}
       </div>

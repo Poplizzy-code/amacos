@@ -1524,21 +1524,23 @@ export default function AdminDashboard() {
       </div>
 
       {/* Tab bar */}
-      <div className="flex gap-1 bg-white border border-gray-100 rounded-2xl p-1 shadow-sm w-fit">
-        {TABS.map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-              activeTab === tab.id
-                ? 'bg-[#1a3c5e] text-white shadow-sm'
-                : 'text-gray-500 hover:text-[#1a3c5e] hover:bg-gray-50'
-            }`}
-          >
-            <tab.icon size={15} />
-            <span className="hidden sm:inline">{tab.label}</span>
-          </button>
-        ))}
+      <div className="overflow-x-auto -mx-1 px-1 pb-1">
+        <div className="flex gap-1 bg-white border border-gray-100 rounded-2xl p-1 shadow-sm w-fit">
+          {TABS.map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${
+                activeTab === tab.id
+                  ? 'bg-[#1a3c5e] text-white shadow-sm'
+                  : 'text-gray-500 hover:text-[#1a3c5e] hover:bg-gray-50'
+              }`}
+            >
+              <tab.icon size={15} className="flex-shrink-0" />
+              <span className="hidden sm:inline">{tab.label}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Tab content */}

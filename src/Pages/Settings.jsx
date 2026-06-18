@@ -401,7 +401,7 @@ function StudentSettingsTab() {
   return (
     <div className="space-y-4">
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        <div className="px-5 py-4 border-b border-gray-50 flex items-center justify-between gap-3">
+        <div className="px-5 py-4 border-b border-gray-50 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
             <h3 className="font-semibold text-[#1a3c5e]">Student Accounts</h3>
             <p className="text-xs text-gray-400 mt-0.5">{students.length} student{students.length !== 1 ? 's' : ''}</p>
@@ -410,7 +410,7 @@ function StudentSettingsTab() {
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Search by name, email or matric..."
-            className="px-3 py-2 text-xs border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#1a3c5e]/20 focus:border-[#1a3c5e] w-56"
+            className="px-3 py-2 text-xs border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#1a3c5e]/20 focus:border-[#1a3c5e] w-full sm:w-56"
           />
         </div>
 

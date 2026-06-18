@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Outlet, NavLink, useNavigate } from 'react-router-dom'
+import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useSocket } from '../context/SocketContext'
 import toast from 'react-hot-toast'
@@ -8,7 +8,7 @@ import {
   Monitor, Code2, Rss, Newspaper, Star, Megaphone,
   FlaskConical, Calendar, Users, Mail, Bell, Shield,
   Info, LogOut, Menu, X, BookMarked, ClipboardList,
-  GraduationCap, ChevronRight, Settings,
+  GraduationCap, ChevronRight, Settings, ArrowLeft,
 } from 'lucide-react'
 
 const navItems = [
@@ -38,7 +38,9 @@ export default function MainLayout() {
   const { user, logout } = useAuth()
   const { notifCount, resetNotifCount } = useSocket()
   const navigate = useNavigate()
+  const location = useLocation()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const isDashboard = location.pathname === '/app/dashboard'
 
   const handleLogout = async () => {
     await logout()
@@ -154,10 +156,18 @@ export default function MainLayout() {
 
         {/* Top bar */}
         <header className="sticky top-0 z-30 bg-gradient-to-r from-white/70 via-slate-50/70 to-white/70 backdrop-blur-xl border-b border-gray-200/70 px-4 py-3 flex items-center justify-between flex-shrink-0 shadow-sm transition-colors duration-300">
-          <button onClick={() => setSidebarOpen(true)}
-            className="lg:hidden p-2 rounded-xl hover:bg-gray-100 text-gray-500 transition">
-            <Menu size={20} />
-          </button>
+          <div className="flex items-center gap-1 lg:hidden">
+            <button onClick={() => setSidebarOpen(true)}
+              className="p-2 rounded-xl hover:bg-gray-100 text-gray-500 transition">
+              <Menu size={20} />
+            </button>
+            {!isDashboard && (
+              <button onClick={() => navigate(-1)}
+                className="p-2 rounded-xl hover:bg-gray-100 text-gray-500 transition">
+                <ArrowLeft size={20} />
+              </button>
+            )}
+          </div>
 
           <div className="hidden lg:flex items-center gap-2 text-sm">
             <span className="font-bold text-[#1a3c5e]">AMACOS</span>
@@ -187,7 +197,7 @@ export default function MainLayout() {
         </header>
 
         {/* Page content */}
-        <main className="flex-1 overflow-y-auto p-4 lg:p-6">
+        <main className="flex-1 overflow-y-auto overflow-x-hidden p-4 lg:p-6">
           <Outlet />
         </main>
       </div>

@@ -18,7 +18,7 @@ export default function PublicLayout() {
   const [menuOpen, setMenuOpen] = useState(false)
 
   return (
-    <div className="min-h-screen bg-[#f0f4f8]">
+    <div className="min-h-screen bg-[#f0f4f8] overflow-x-hidden">
 
       {/* Navbar */}
       <nav className="sticky top-0 z-20 shadow-sm"
