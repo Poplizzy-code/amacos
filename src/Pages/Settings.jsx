@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import axios from 'axios'
 import toast from 'react-hot-toast'
 import { useAuth } from '../context/AuthContext'
 import {
   User, Lock, Eye, EyeOff, Copy, Check, Pencil, X,
   ShieldCheck, ShieldOff, GraduationCap, UserCheck,
-  UserX, KeyRound, RefreshCw, Loader2,
+  UserX, KeyRound, RefreshCw, Loader2, Camera,
 } from 'lucide-react'
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
@@ -43,10 +43,30 @@ function TabBtn({ active, onClick, children }) {
 function ProfileTab({ user, setUser: setCtxUser }) {
   const [form, setForm] = useState({ fullName: user?.fullName || '', bio: user?.bio || '' })
   const [saving, setSaving] = useState(false)
+  const [avatarUploading, setAvatarUploading] = useState(false)
+  const avatarInputRef = useRef(null)
 
   const [showPw, setShowPw] = useState(false)
   const [pw, setPw] = useState({ current: '', next: '', show: false })
   const [savingPw, setSavingPw] = useState(false)
+
+  const uploadAvatar = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    setAvatarUploading(true)
+    try {
+      const fd = new FormData()
+      fd.append('avatar', file)
+      const { data } = await axios.put('/api/settings/personal/avatar', fd, { withCredentials: true })
+      setCtxUser(data.user)
+      toast.success('Profile photo updated.')
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to upload photo.')
+    } finally {
+      setAvatarUploading(false)
+      if (avatarInputRef.current) avatarInputRef.current.value = ''
+    }
+  }
 
   const saveProfile = async () => {
     setSaving(true)
@@ -78,6 +98,41 @@ function ProfileTab({ user, setUser: setCtxUser }) {
 
   return (
     <div className="space-y-6 max-w-lg">
+      {/* Avatar */}
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+        <h3 className="font-semibold text-[#1a3c5e] flex items-center gap-2 mb-4"><Camera size={16} /> Profile Photo</h3>
+        <div className="flex items-center gap-4">
+          <div className="relative flex-shrink-0">
+            {user?.avatar ? (
+              <img src={user.avatar} alt={user.fullName} className="w-20 h-20 rounded-full object-cover border-2 border-gray-100 shadow-sm" />
+            ) : (
+              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#1a3c5e] to-[#2563a8] flex items-center justify-center text-white text-2xl font-bold border-2 border-gray-100 shadow-sm">
+                {user?.fullName?.charAt(0).toUpperCase()}
+              </div>
+            )}
+            <button
+              onClick={() => avatarInputRef.current?.click()}
+              disabled={avatarUploading}
+              className="absolute bottom-0 right-0 w-7 h-7 bg-[#1a3c5e] hover:bg-[#162f4a] text-white rounded-full flex items-center justify-center shadow-md transition"
+            >
+              {avatarUploading ? <Loader2 size={13} className="animate-spin" /> : <Camera size={13} />}
+            </button>
+          </div>
+          <div>
+            <p className="text-sm font-medium text-gray-700">{user?.fullName}</p>
+            <button
+              onClick={() => avatarInputRef.current?.click()}
+              disabled={avatarUploading}
+              className="text-xs text-[#1a3c5e] hover:underline mt-1 disabled:opacity-50"
+            >
+              {avatarUploading ? 'Uploading...' : 'Change photo'}
+            </button>
+            <p className="text-xs text-gray-400 mt-0.5">JPG, PNG, WEBP — max 10 MB</p>
+          </div>
+        </div>
+        <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={uploadAvatar} />
+      </div>
+
       {/* Profile info */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-4">
         <h3 className="font-semibold text-[#1a3c5e] flex items-center gap-2"><User size={16} /> Profile</h3>

@@ -7,12 +7,14 @@ import {
   CalendarDays, FlaskConical, Megaphone, Star,
   ShieldCheck, ShieldOff, Trash2, Upload, Search,
   FileText, Image as ImageIcon, Film, File, X, Loader2, Plus,
-  RefreshCw, Eye, Calendar, MapPin, ExternalLink, User, Download
+  RefreshCw, Eye, Calendar, MapPin, ExternalLink, User, Download,
+  GraduationCap, Pencil,
 } from 'lucide-react'
 
 const TABS = [
   { id: 'overview',       label: 'Overview',       icon: LayoutDashboard },
   { id: 'users',          label: 'Users',           icon: Users },
+  { id: 'session',        label: 'Session',         icon: GraduationCap },
   { id: 'resources',      label: 'Resources',       icon: BookOpen },
   { id: 'past-questions', label: 'Past Questions',  icon: FileQuestion },
   { id: 'events',         label: 'Events',          icon: CalendarDays },
@@ -1504,6 +1506,211 @@ function PressTab() {
   )
 }
 
+// ─── Session Tab ─────────────────────────────────────────────────────────────
+function SessionTab() {
+  const [currentSession, setCurrentSession] = useState('')
+  const [newSession, setNewSession] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [promoting, setPromoting] = useState(false)
+  const [students, setStudents] = useState([])
+  const [search, setSearch] = useState('')
+  const [editingLevel, setEditingLevel] = useState(null)
+  const [settingLevel, setSettingLevel] = useState(null)
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const [sessionRes, studentsRes] = await Promise.all([
+          axios.get('/api/settings/session', { withCredentials: true }),
+          axios.get('/api/settings/students', { withCredentials: true }),
+        ])
+        const s = sessionRes.data.currentSession || ''
+        setCurrentSession(s)
+        setNewSession(s)
+        setStudents(studentsRes.data.students || [])
+      } catch {
+        toast.error('Failed to load session data.')
+      } finally {
+        setLoading(false)
+      }
+    }
+    load()
+  }, [])
+
+  const saveSession = async () => {
+    if (!newSession.trim()) return toast.error('Session cannot be empty.')
+    setSaving(true)
+    try {
+      const { data } = await axios.put('/api/settings/session', { currentSession: newSession }, { withCredentials: true })
+      setCurrentSession(data.currentSession)
+      toast.success('Session updated.')
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const promoteAll = async () => {
+    setPromoting(true)
+    try {
+      const { data } = await axios.put('/api/settings/session/promote', {}, { withCredentials: true })
+      toast.success(data.message)
+      const res = await axios.get('/api/settings/students', { withCredentials: true })
+      setStudents(res.data.students || [])
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to promote students.')
+    } finally {
+      setPromoting(false)
+    }
+  }
+
+  const setStudentLevel = async (studentId, level) => {
+    setSettingLevel(studentId)
+    try {
+      const { data } = await axios.put(`/api/settings/students/${studentId}/level`, { level }, { withCredentials: true })
+      setStudents(prev => prev.map(s => s._id === studentId ? { ...s, level: data.user.level } : s))
+      setEditingLevel(null)
+      toast.success('Level updated.')
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed.')
+    } finally {
+      setSettingLevel(null)
+    }
+  }
+
+  const filtered = students.filter(s =>
+    s.fullName?.toLowerCase().includes(search.toLowerCase()) ||
+    s.email?.toLowerCase().includes(search.toLowerCase()) ||
+    s.matricNumber?.toLowerCase().includes(search.toLowerCase())
+  )
+
+  if (loading) return <CenteredSpinner />
+
+  return (
+    <div className="space-y-6">
+      {/* Current Session */}
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+        <h3 className="font-semibold text-[#1a3c5e] mb-1">Academic Session</h3>
+        {currentSession && (
+          <p className="text-sm text-gray-500 mb-4">
+            Active session: <span className="font-semibold text-[#1a3c5e]">{currentSession}</span>
+          </p>
+        )}
+        <div className="flex gap-2">
+          <input
+            value={newSession}
+            onChange={e => setNewSession(e.target.value)}
+            placeholder="e.g. 2025/2026"
+            className="flex-1 px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#1a3c5e]/20 focus:border-[#1a3c5e]"
+          />
+          <button
+            onClick={saveSession}
+            disabled={saving}
+            className="px-4 py-2.5 bg-[#1a3c5e] text-white text-sm rounded-xl hover:bg-[#162f4a] font-medium disabled:opacity-60 flex items-center gap-2"
+          >
+            {saving ? <Loader2 size={14} className="animate-spin" /> : null} Save
+          </button>
+        </div>
+      </div>
+
+      {/* Promote All Students */}
+      <div className="bg-amber-50 border border-amber-100 rounded-2xl p-5">
+        <div className="flex items-start gap-4">
+          <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center flex-shrink-0">
+            <GraduationCap size={20} className="text-amber-600" />
+          </div>
+          <div className="flex-1">
+            <h3 className="font-semibold text-amber-900">Promote All Students</h3>
+            <p className="text-sm text-amber-700 mt-1">
+              Promotes every student one level: 100L → 200L, 200L → 300L, 300L → 400L.
+              Students at 400L remain unchanged. This action cannot be undone.
+            </p>
+            <ConfirmButton
+              label={promoting ? 'Promoting...' : 'Promote All Students'}
+              icon={GraduationCap}
+              onClick={promoteAll}
+              className="mt-3 flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-sm rounded-xl font-medium transition disabled:opacity-60"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Individual Student Level Control */}
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm">
+        <div className="px-5 py-4 border-b border-gray-50 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div>
+            <h3 className="font-semibold text-[#1a3c5e]">Set Individual Student Level</h3>
+            <p className="text-xs text-gray-400 mt-0.5">For suspended or repeating students</p>
+          </div>
+          <input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search students..."
+            className="px-3 py-2 text-xs border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#1a3c5e]/20 focus:border-[#1a3c5e] w-full sm:w-56"
+          />
+        </div>
+        <div className="divide-y divide-gray-50 max-h-[500px] overflow-y-auto">
+          {filtered.length === 0 ? (
+            <p className="text-gray-400 text-sm p-5">No students found.</p>
+          ) : filtered.map(s => (
+            <div key={s._id} className="flex items-center gap-3 px-5 py-3">
+              {s.avatar ? (
+                <img src={s.avatar} alt={s.fullName} className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
+              ) : (
+                <div className="w-8 h-8 rounded-full bg-[#1a3c5e] flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                  {s.fullName?.charAt(0).toUpperCase()}
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-800 truncate">{s.fullName}</p>
+                <p className="text-xs text-gray-400 truncate">{s.matricNumber || s.email}</p>
+              </div>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                {editingLevel === s._id ? (
+                  <div className="flex items-center gap-1">
+                    {['100', '200', '300', '400'].map(lvl => (
+                      <button
+                        key={lvl}
+                        onClick={() => setStudentLevel(s._id, lvl)}
+                        disabled={settingLevel === s._id}
+                        className={`text-xs px-2 py-1 rounded-lg font-medium transition ${
+                          s.level === lvl
+                            ? 'bg-[#1a3c5e] text-white'
+                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        } disabled:opacity-50`}
+                      >
+                        {lvl}L
+                      </button>
+                    ))}
+                    <button onClick={() => setEditingLevel(null)} className="p-1 text-gray-400 hover:text-gray-600">
+                      <X size={14} />
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <span className="text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full font-medium">
+                      {s.level}L
+                    </span>
+                    <button
+                      onClick={() => setEditingLevel(s._id)}
+                      className="p-1.5 text-gray-400 hover:text-[#1a3c5e] hover:bg-gray-100 rounded-lg transition"
+                      title="Change level"
+                    >
+                      <Pencil size={13} />
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function CenteredSpinner() {
   return (
     <div className="flex items-center justify-center py-16">
@@ -1546,6 +1753,7 @@ export default function AdminDashboard() {
       {/* Tab content */}
       {activeTab === 'overview'       && <OverviewTab />}
       {activeTab === 'users'          && <UsersTab />}
+      {activeTab === 'session'        && <SessionTab />}
       {activeTab === 'resources'      && <ResourcesTab />}
       {activeTab === 'past-questions' && <PastQuestionsTab />}
       {activeTab === 'events'         && <EventsTab />}

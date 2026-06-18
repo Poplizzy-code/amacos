@@ -25,6 +25,7 @@ const navItems = [
   { label: 'Research & Opps',      path: '/app/research',       icon: FlaskConical },
   { label: 'Events',               path: '/app/events',         icon: Calendar },
   { label: 'Alumni Network',       path: '/app/alumni',         icon: Users },
+  { label: 'Groups',               path: '/app/groups',         icon: Users },
   { label: 'Messages',             path: '/app/messages',       icon: Mail },
   { label: 'Notifications',        path: '/app/notifications',  icon: Bell },
   { label: 'Tech Community',       path: '/app/tech',           icon: Code2,         techOnly: true },
@@ -97,8 +98,14 @@ export default function MainLayout() {
         {/* User card */}
         <div className="mx-3 my-3 p-3 rounded-xl bg-white/5 border border-white/5">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 to-amber-500 flex items-center justify-center text-[#0d1f35] font-bold text-sm flex-shrink-0 shadow-lg shadow-amber-500/20">
-              {initial}
+            <div className="w-9 h-9 rounded-xl flex-shrink-0 shadow-lg overflow-hidden">
+              {user?.avatar ? (
+                <img src={user.avatar} alt={user.fullName} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-amber-400 to-amber-500 flex items-center justify-center text-[#0d1f35] font-bold text-sm shadow-amber-500/20">
+                  {initial}
+                </div>
+              )}
             </div>
             <div className="min-w-0">
               <p className="text-white text-sm font-semibold truncate">{user?.fullName}</p>
@@ -188,8 +195,14 @@ export default function MainLayout() {
             </NavLink>
 
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#1a3c5e] to-[#2563a8] flex items-center justify-center text-white text-xs font-bold shadow-sm">
-                {initial}
+              <div className="w-8 h-8 rounded-xl overflow-hidden shadow-sm flex-shrink-0">
+                {user?.avatar ? (
+                  <img src={user.avatar} alt={user.fullName} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-[#1a3c5e] to-[#2563a8] flex items-center justify-center text-white text-xs font-bold">
+                    {initial}
+                  </div>
+                )}
               </div>
               <span className="hidden sm:block text-sm font-semibold text-gray-700">{firstName}</span>
             </div>

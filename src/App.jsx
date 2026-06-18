@@ -30,6 +30,7 @@ import Assignments from './Pages/Assignments'
 import Explore from './Pages/Explore'
 import Settings from './Pages/Settings'
 import Filters from './Pages/Filters'
+import Groups from './Pages/Groups'
 
 const Spinner = () => (
   <div className="flex items-center justify-center h-screen bg-[#f8fafc]">
@@ -115,6 +116,7 @@ const AppRoutes = () => {
         <Route path="staff-panel" element={<StaffRoute><StaffPanel /></StaffRoute>} />
         <Route path="settings" element={<Settings />} />
         <Route path="filters" element={<Filters />} />
+        <Route path="groups" element={<Groups />} />
         <Route path="messages" element={<Messages />} />
         <Route path="notifications" element={<Notifications />} />
         <Route path="admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />

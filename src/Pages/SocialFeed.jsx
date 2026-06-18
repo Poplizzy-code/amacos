@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react'
 import axios from 'axios'
-import FilterStudio from '../Components/FilterStudio'
+const FilterStudio = lazy(() => import('../Components/FilterStudio'))
 import toast from 'react-hot-toast'
 import { useAuth } from '../context/AuthContext'
 import SignInPrompt from '../Components/SignInPrompt'
@@ -647,7 +647,9 @@ function CameraModal({ open, onClose, user, onPost }) {
       ) : (
         <div className="flex-1 overflow-y-auto bg-[#08101f] p-4">
           <div className="mx-auto w-full max-w-6xl rounded-3xl border border-white/10 bg-black/80 p-4 shadow-2xl">
-            <FilterStudio initialMode="camera" />
+            <Suspense fallback={<div className="flex items-center justify-center h-40"><Loader2 size={24} className="animate-spin text-white/50" /></div>}>
+              <FilterStudio initialMode="camera" />
+            </Suspense>
           </div>
         </div>
       )}
