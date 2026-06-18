@@ -43,13 +43,15 @@ export default function LoginPage() {
         </div>
         <p className="text-blue-300 text-sm">© 2025 AMACOS. Adeleke University.</p>
       </div>
-      <div className="flex-1 flex items-center justify-center px-6 py-12 bg-white">
-        <div className="w-full max-w-md">
+      <div className="flex-1 flex items-center justify-center bg-white min-h-screen">
+        <div className="w-full max-w-md px-6 py-10 sm:py-14">
           <div className="lg:hidden flex items-center gap-2 mb-8">
-            <BookOpen size={22} className="text-[#1a3c5e]" />
-            <span className="font-semibold text-[#1a3c5e] text-lg">AMACOS</span>
+            <div className="w-8 h-8 bg-[#1a3c5e] rounded-xl flex items-center justify-center">
+              <BookOpen size={16} className="text-amber-400" />
+            </div>
+            <span className="font-bold text-[#1a3c5e] text-lg tracking-wide">AMACOS</span>
           </div>
-          <h2 className="text-3xl font-display text-[#1a3c5e] mb-1">Welcome back</h2>
+          <h2 className="text-2xl sm:text-3xl font-display text-[#1a3c5e] mb-1">Welcome back</h2>
           <p className="text-gray-500 mb-8 text-sm">Sign in to your AMACOS account</p>
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
@@ -71,13 +73,13 @@ export default function LoginPage() {
               </div>
             </div>
             <button type="submit" disabled={loading}
-              className="w-full bg-[#1a3c5e] hover:bg-[#15324f] text-white py-3 rounded-xl font-medium text-sm transition disabled:opacity-60">
+              className="w-full bg-[#1a3c5e] hover:bg-[#15324f] text-white py-3.5 rounded-xl font-medium text-sm transition disabled:opacity-60">
               {loading ? 'Signing in...' : 'Sign In'}
             </button>
           </form>
           <p className="text-center text-sm text-gray-500 mt-6">
-            Do not have an account?{' '}
-            <Link to="/register" className="text-[#1a3c5e] font-medium hover:underline">Create one</Link>
+            Don't have an account?{' '}
+            <Link to="/register" className="text-[#1a3c5e] font-semibold hover:underline">Create one</Link>
           </p>
         </div>
       </div>
