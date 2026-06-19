@@ -564,9 +564,11 @@ function CameraModal({ open, onClose, user, onPost }) {
         }
         fd.append('media', new File([blob], captured.fileName, { type: captured.mimeType }))
       }
+      const token = localStorage.getItem('amacos_token')
       const { data } = await axios.post('/api/posts', fd, {
         withCredentials: true,
         timeout: isVid ? 300000 : captured ? 60000 : 15000,
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
       })
       if (tid) toast.dismiss(tid)
       onPost(data.post)
