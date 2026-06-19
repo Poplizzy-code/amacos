@@ -9,7 +9,7 @@ import {
   Globe, Lock, Loader2, Image as ImageIcon, Plus,
   ArrowLeft, Trash2, Send, Search, Check, Camera,
   RefreshCw, Zap, ZapOff, Smile, Paperclip, Share2,
-  UserPlus, UserCheck, Clock, AlertCircle, Film, File,
+  UserPlus, UserCheck, Clock, AlertCircle, Film, File as FileIcon,
 } from 'lucide-react'
 
 // ── Effects ────────────────────────────────────────────────────────────────────
@@ -1417,7 +1417,7 @@ function DMPanel({ open, onClose, currentUser }) {
                         ) : (
                           <a href={m.mediaUrl} target="_blank" rel="noreferrer"
                             className={`flex items-center gap-2 px-4 py-3 text-sm ${mine ? 'bg-[#1a3c5e] text-white' : 'bg-white text-gray-800 border border-gray-100'}`}>
-                            <File size={16} /> {m.mediaName || 'File'}
+                            <FileIcon size={16} /> {m.mediaName || 'File'}
                           </a>
                         )}
                         {m.content && (
@@ -1445,7 +1445,7 @@ function DMPanel({ open, onClose, currentUser }) {
                 <div className="flex-1 flex items-center gap-2 min-w-0">
                   {mediaFile.type.startsWith('image/') ? <ImageIcon size={14} className="text-amber-600" />
                     : mediaFile.type.startsWith('video/') ? <Film size={14} className="text-amber-600" />
-                    : <File size={14} className="text-amber-600" />}
+                    : <FileIcon size={14} className="text-amber-600" />}
                   <span className="text-xs text-amber-700 truncate font-medium">{mediaFile.name}</span>
                 </div>
                 <button onClick={() => setMediaFile(null)} className="w-5 h-5 flex items-center justify-center rounded-full bg-amber-200 text-amber-700 hover:bg-amber-300 transition flex-shrink-0">
