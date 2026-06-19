@@ -28,6 +28,7 @@ import NewsArticle from './Pages/NewsArticle'
 import StaffPanel from './Pages/StaffPanel'
 import Assignments from './Pages/Assignments'
 import Explore from './Pages/Explore'
+import AppExplore from './Pages/AppExplore'
 import Settings from './Pages/Settings'
 import Filters from './Pages/Filters'
 import Groups from './Pages/Groups'
@@ -113,6 +114,7 @@ const AppRoutes = () => {
         <Route path="forum" element={<Forum />} />
         <Route path="cbt" element={<CBT />} />
         <Route path="tech" element={<TechCommunity />} />
+        <Route path="explore" element={<AppExplore />} />
         <Route path="feed" element={<SocialFeed />} />
         <Route path="news" element={<NewsFeed />} />
         <Route path="news/:id" element={<NewsArticle />} />

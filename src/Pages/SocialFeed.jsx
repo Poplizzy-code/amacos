@@ -1646,7 +1646,7 @@ function PostCard({ post, currentUser, onDelete, onLike, onOpenComments, onShare
 }
 
 // ── Main ───────────────────────────────────────────────────────────────────────
-export default function SocialFeed() {
+export default function SocialFeed({ topOffset = 'top-0' }) {
   const { user, loading: authLoading } = useAuth()
   const [posts, setPosts] = useState([])
   const [loading, setLoading] = useState(true)
@@ -1745,7 +1745,7 @@ export default function SocialFeed() {
     <div className="relative min-h-full bg-[#060d1a]">
 
       {/* ── Sticky top bar ── */}
-      <div className="sticky top-0 z-20 bg-[#060d1a]/95 backdrop-blur-md border-b border-white/5">
+      <div className={`sticky ${topOffset} z-20 bg-[#060d1a]/95 backdrop-blur-md border-b border-white/5`}>
         <div className="px-4 pt-3 pb-0 flex items-center justify-between max-w-2xl mx-auto">
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[#1a3c5e] to-[#2a5a8e] flex items-center justify-center">
