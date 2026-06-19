@@ -22,8 +22,10 @@ export const SocketProvider = ({ children }) => {
     const token = localStorage.getItem('amacos_token')
     const socket = io(serverUrl, {
       withCredentials: true,
-      transports: ['websocket', 'polling'],
+      transports: ['polling', 'websocket'],
       auth: token ? { token } : undefined,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 3000,
     })
 
     socketRef.current = socket
