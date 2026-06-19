@@ -1521,38 +1521,37 @@ function PostCard({ post, currentUser, onDelete, onLike, onOpenComments, onShare
   }, [showMenu])
 
   return (
-    <article className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+    <article className="border-b border-white/5 w-full">
       {post.mediaUrl && (
-        <div className="relative w-full bg-[#060d1a]">
+        <div className="relative w-full bg-black overflow-hidden">
           {post.mediaType === 'video'
-            ? <video src={post.mediaUrl} className="w-full max-h-[500px] object-contain" controls playsInline />
-            : <img src={post.mediaUrl} alt="" className="w-full max-h-[500px] object-cover" loading="lazy" />
+            ? <video src={post.mediaUrl} className="w-full max-h-[560px] object-contain" controls playsInline />
+            : <img src={post.mediaUrl} alt="" className="w-full max-h-[560px] object-cover" loading="lazy" />
           }
           <span className={`absolute top-3 right-3 flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-full backdrop-blur-md ${
-            post.isPublic ? 'bg-black/30 text-white' : 'bg-amber-400/90 text-[#1a2a3a]'
+            post.isPublic ? 'bg-black/40 text-white' : 'bg-amber-400/90 text-[#1a2a3a]'
           }`}>
             {post.isPublic ? <Globe size={10} /> : <Lock size={10} />}
             {post.isPublic ? 'Public' : 'AMACOS'}
           </span>
-          {/* Share button on media */}
           {currentUser && (
             <button onClick={() => onShare(post)}
-              className="absolute top-3 left-3 flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-full bg-black/30 text-white backdrop-blur-md hover:bg-black/50 transition">
+              className="absolute top-3 left-3 flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-full bg-black/40 text-white backdrop-blur-md hover:bg-black/60 transition">
               <Share2 size={10} /> Share
             </button>
           )}
         </div>
       )}
 
-      <div className="px-4 pt-4 pb-3">
-        <div className="flex items-center justify-between mb-3">
+      <div className="px-4 pt-3 pb-3">
+        <div className="flex items-center justify-between mb-2.5">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#1a3c5e] to-[#2a5a8e] flex items-center justify-center text-white font-bold text-sm flex-shrink-0 ring-2 ring-white shadow-sm">
+            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#1a3c5e] to-[#2a5a8e] flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
               {initial}
             </div>
             <div>
-              <p className="font-bold text-[#1a3c5e] text-sm leading-tight">{post.author?.fullName}</p>
-              <div className="flex items-center gap-1.5 text-xs text-gray-400 mt-0.5">
+              <p className="font-bold text-white text-sm leading-tight">{post.author?.fullName}</p>
+              <div className="flex items-center gap-1.5 text-xs text-gray-500 mt-0.5">
                 <span>{timeAgo(post.createdAt)}</span>
                 {!post.mediaUrl && (<>
                   <span>·</span>
@@ -1568,13 +1567,13 @@ function PostCard({ post, currentUser, onDelete, onLike, onOpenComments, onShare
           {isOwn && (
             <div className="relative" ref={menuRef}>
               <button onClick={() => setShowMenu(v => !v)}
-                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-400 transition">
+                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 text-gray-500 transition">
                 <MoreHorizontal size={18} />
               </button>
               {showMenu && (
-                <div className="absolute right-0 top-full mt-1 bg-white border border-gray-100 rounded-2xl shadow-xl z-20 overflow-hidden w-36">
+                <div className="absolute right-0 top-full mt-1 bg-[#0d1f35] border border-white/10 rounded-2xl shadow-xl z-20 overflow-hidden w-36">
                   <button onClick={() => { onDelete(post._id); setShowMenu(false) }}
-                    className="flex items-center gap-2 w-full px-4 py-3 text-sm text-red-500 hover:bg-red-50 transition">
+                    className="flex items-center gap-2 w-full px-4 py-3 text-sm text-red-400 hover:bg-white/5 transition">
                     <Trash2 size={14} /> Delete post
                   </button>
                 </div>
@@ -1585,41 +1584,41 @@ function PostCard({ post, currentUser, onDelete, onLike, onOpenComments, onShare
 
         {post.content && (
           <div className="mb-3">
-            <p className="text-gray-800 text-sm leading-relaxed whitespace-pre-wrap">
+            <p className="text-gray-200 text-sm leading-relaxed whitespace-pre-wrap">
               {isLong && !expanded ? post.content.slice(0, MAX) + '…' : post.content}
             </p>
             {isLong && (
-              <button onClick={() => setExpanded(v => !v)} className="text-xs font-bold text-[#1a3c5e] mt-1">
+              <button onClick={() => setExpanded(v => !v)} className="text-xs font-bold text-blue-400 mt-1">
                 {expanded ? 'less' : 'more'}
               </button>
             )}
           </div>
         )}
 
-        <div className="flex items-center justify-between pt-2.5 border-t border-gray-50">
+        <div className="flex items-center justify-between pt-2.5 border-t border-white/5">
           <div className="flex items-center gap-1">
             <button onClick={handleLike}
               className={`flex items-center gap-1.5 px-3 py-2 rounded-2xl text-sm font-bold transition-all duration-200 ${
-                liked ? 'text-rose-500 bg-rose-50' : 'text-gray-400 hover:text-rose-400 hover:bg-rose-50'
+                liked ? 'text-rose-400 bg-rose-500/10' : 'text-gray-500 hover:text-rose-400 hover:bg-rose-500/5'
               } ${likePop ? 'scale-125' : 'scale-100'}`}>
               <Heart size={18} fill={liked ? 'currentColor' : 'none'} strokeWidth={liked ? 0 : 2} />
               <span>{fmtNum(post.likes?.length)}</span>
             </button>
             <button onClick={() => onOpenComments(post)}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-2xl text-sm font-bold text-gray-400 hover:text-[#1a3c5e] hover:bg-[#1a3c5e]/5 transition">
+              className="flex items-center gap-1.5 px-3 py-2 rounded-2xl text-sm font-bold text-gray-500 hover:text-blue-300 hover:bg-blue-500/5 transition">
               <MessageCircle size={18} />
               <span>{fmtNum(commentCount)}</span>
             </button>
             {currentUser && (
               <button onClick={() => onShare(post)}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-2xl text-sm font-bold text-gray-400 hover:text-[#1a3c5e] hover:bg-[#1a3c5e]/5 transition">
+                className="flex items-center gap-1.5 px-3 py-2 rounded-2xl text-sm font-bold text-gray-500 hover:text-blue-300 hover:bg-blue-500/5 transition">
                 <Share2 size={18} />
               </button>
             )}
           </div>
           <button onClick={() => setBookmarked(v => !v)}
             className={`flex items-center gap-1.5 px-3 py-2 rounded-2xl text-sm font-bold transition ${
-              bookmarked ? 'text-[#1a3c5e] bg-[#1a3c5e]/10' : 'text-gray-400 hover:text-[#1a3c5e] hover:bg-[#1a3c5e]/5'
+              bookmarked ? 'text-amber-400 bg-amber-400/10' : 'text-gray-500 hover:text-amber-400 hover:bg-amber-400/5'
             }`}>
             <Bookmark size={18} fill={bookmarked ? 'currentColor' : 'none'} />
             {bookmarked && <Check size={13} />}
@@ -1722,29 +1721,29 @@ export default function SocialFeed() {
   }
 
   return (
-    <div className="relative min-h-full">
+    <div className="relative min-h-full bg-[#060d1a]">
 
       {/* ── Sticky top bar ── */}
-      <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm">
-        <div className="max-w-xl mx-auto px-4 pt-3 pb-0 flex items-center justify-between">
+      <div className="sticky top-0 z-20 bg-[#060d1a]/95 backdrop-blur-md border-b border-white/5">
+        <div className="px-4 pt-3 pb-0 flex items-center justify-between max-w-2xl mx-auto">
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[#1a3c5e] to-[#2a5a8e] flex items-center justify-center">
               <span className="text-white text-xs font-black">A</span>
             </div>
-            <h1 className="font-black text-[#1a3c5e] text-lg tracking-tight">AMACOS Feed</h1>
+            <h1 className="font-black text-white text-lg tracking-tight">AMACOS Feed</h1>
           </div>
           {user && (
             <button onClick={() => setDmOpen(true)}
-              className="w-9 h-9 flex items-center justify-center rounded-2xl hover:bg-[#1a3c5e]/5 text-[#1a3c5e] transition">
+              className="w-9 h-9 flex items-center justify-center rounded-2xl hover:bg-white/5 text-gray-400 hover:text-white transition">
               <MessageCircle size={21} />
             </button>
           )}
         </div>
-        <div className="max-w-xl mx-auto px-4 flex gap-6 mt-1">
+        <div className="px-4 flex gap-6 mt-1 max-w-2xl mx-auto">
           {[['all', 'For You'], ['amacos', 'AMACOS Only']].map(([val, label]) => (
             <button key={val} onClick={() => setTab(val)}
               className={`text-sm font-bold pb-2.5 border-b-2 transition-all ${
-                tab === val ? 'text-[#1a3c5e] border-[#1a3c5e]' : 'text-gray-400 border-transparent hover:text-gray-600'
+                tab === val ? 'text-white border-white' : 'text-gray-600 border-transparent hover:text-gray-400'
               }`}>
               {label}
             </button>
@@ -1753,45 +1752,45 @@ export default function SocialFeed() {
       </div>
 
       {/* ── Feed ── */}
-      <div className="max-w-xl mx-auto px-4 py-5 space-y-4 pb-28">
+      <div className="pb-28 max-w-2xl mx-auto">
         {loading && [...Array(3)].map((_, i) => (
-          <div key={i} className="bg-white rounded-3xl overflow-hidden border border-gray-100 animate-pulse">
-            <div className="h-52 bg-gray-100" />
+          <div key={i} className="border-b border-white/5 animate-pulse">
+            <div className="h-52 bg-white/5" />
             <div className="p-4 space-y-2">
               <div className="flex gap-3">
-                <div className="w-9 h-9 rounded-full bg-gray-200" />
+                <div className="w-9 h-9 rounded-full bg-white/10" />
                 <div className="flex-1 space-y-1.5 pt-1">
-                  <div className="h-3 bg-gray-200 rounded-full w-32" />
-                  <div className="h-2.5 bg-gray-100 rounded-full w-20" />
+                  <div className="h-3 bg-white/10 rounded-full w-32" />
+                  <div className="h-2.5 bg-white/5 rounded-full w-20" />
                 </div>
               </div>
-              <div className="h-3 bg-gray-100 rounded-full w-full" />
-              <div className="h-3 bg-gray-100 rounded-full w-3/4" />
+              <div className="h-3 bg-white/5 rounded-full w-full" />
+              <div className="h-3 bg-white/5 rounded-full w-3/4" />
             </div>
           </div>
         ))}
 
         {!loading && fetchError && (
-          <div className="bg-white rounded-3xl p-12 text-center border border-gray-100 shadow-sm">
-            <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-3">
+          <div className="p-12 text-center">
+            <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-3">
               <AlertCircle size={28} className="text-red-400" />
             </div>
-            <p className="font-bold text-gray-600">Couldn't load posts</p>
-            <p className="text-sm text-gray-400 mt-1">The server may be waking up. Please try again.</p>
+            <p className="font-bold text-white">Couldn't load posts</p>
+            <p className="text-sm text-gray-500 mt-1">The server may be waking up. Please try again.</p>
             <button onClick={loadPosts}
-              className="mt-4 px-5 py-2 bg-[#1a3c5e] text-white text-sm font-bold rounded-xl hover:bg-[#152f4a] transition flex items-center gap-2 mx-auto">
+              className="mt-4 px-5 py-2 bg-white/10 text-white text-sm font-bold rounded-xl hover:bg-white/20 transition flex items-center gap-2 mx-auto">
               <RefreshCw size={14} /> Try Again
             </button>
           </div>
         )}
 
         {!loading && !fetchError && displayPosts.length === 0 && (
-          <div className="bg-white rounded-3xl p-12 text-center border border-gray-100 shadow-sm">
-            <div className="w-16 h-16 bg-[#1a3c5e]/5 rounded-full flex items-center justify-center mx-auto mb-3">
-              <Camera size={28} className="text-[#1a3c5e]/30" />
+          <div className="p-12 text-center">
+            <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-3">
+              <Camera size={28} className="text-gray-600" />
             </div>
-            <p className="font-bold text-gray-600">Nothing here yet</p>
-            <p className="text-sm text-gray-400 mt-1">
+            <p className="font-bold text-gray-400">Nothing here yet</p>
+            <p className="text-sm text-gray-600 mt-1">
               {user ? (tab === 'amacos' ? 'No AMACOS-only posts yet.' : 'Be the first to post!') : 'Sign in to start posting.'}
             </p>
           </div>
@@ -1804,24 +1803,28 @@ export default function SocialFeed() {
             onShare={setSharePost} />
         ))}
 
-        {!user && posts.length > 0 && <SignInPrompt feature="posting, liking and full interaction" />}
+        {!user && posts.length > 0 && (
+          <div className="px-4">
+            <SignInPrompt feature="posting, liking and full interaction" />
+          </div>
+        )}
 
         {/* Infinite scroll sentinel */}
         <div ref={sentinelRef} className="h-4" />
         {loadingMore && (
           <div className="flex justify-center py-4">
-            <Loader2 size={20} className="animate-spin text-gray-300" />
+            <Loader2 size={20} className="animate-spin text-gray-600" />
           </div>
         )}
         {!hasMore && !loading && !fetchError && posts.length > 3 && (
-          <p className="text-center text-xs text-gray-300 py-4 pb-8">You're all caught up ✓</p>
+          <p className="text-center text-xs text-gray-700 py-4 pb-8">You're all caught up ✓</p>
         )}
       </div>
 
       {/* ── FAB ── */}
       {user && (
         <button onClick={() => setCameraOpen(true)}
-          className="fixed bottom-6 right-6 z-30 w-14 h-14 bg-[#1a3c5e] hover:bg-[#152f4a] text-white rounded-full shadow-2xl shadow-[#1a3c5e]/50 flex items-center justify-center transition-all hover:scale-105 active:scale-95"
+          className="fixed bottom-6 right-6 z-30 w-14 h-14 bg-amber-400 hover:bg-amber-300 text-[#0d1f35] rounded-full shadow-2xl shadow-amber-500/30 flex items-center justify-center transition-all hover:scale-105 active:scale-95"
           title="Create post">
           <Plus size={26} strokeWidth={2.5} />
         </button>

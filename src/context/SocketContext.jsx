@@ -18,9 +18,12 @@ export const SocketProvider = ({ children }) => {
       return
     }
 
-    const socket = io(window.location.origin, {
+    const serverUrl = import.meta.env.VITE_API_URL || window.location.origin
+    const token = localStorage.getItem('amacos_token')
+    const socket = io(serverUrl, {
       withCredentials: true,
       transports: ['websocket', 'polling'],
+      auth: token ? { token } : undefined,
     })
 
     socketRef.current = socket

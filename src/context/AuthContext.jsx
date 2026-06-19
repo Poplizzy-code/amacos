@@ -28,6 +28,7 @@ export const AuthProvider = ({ children }) => {
     const fetchMe = async () => {
       try {
         const { data } = await axios.get('/api/auth/me')
+        if (data.token) setAuthToken(data.token)
         setUser(data.user)
       } catch {
         setAuthToken(null)

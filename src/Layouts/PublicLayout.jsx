@@ -29,7 +29,7 @@ export default function PublicLayout() {
   useEffect(() => { setMenuOpen(false) }, [location.pathname])
 
   return (
-    <div className="min-h-screen bg-[#f0f4f8] overflow-x-hidden">
+    <div className="min-h-screen bg-[#060d1a] overflow-x-hidden">
 
       {/* ── Top Navbar ── */}
       <nav className="sticky top-0 z-20 shadow-sm"
@@ -112,41 +112,44 @@ export default function PublicLayout() {
         )}
       </nav>
 
-      {/* Content — extra bottom padding on mobile for bottom nav */}
-      <main className="max-w-5xl mx-auto px-4 py-6 pb-24 md:pb-10">
+      {/* Content — social feed handles its own layout; other pages get a container */}
+      <main className={location.pathname === '/social'
+        ? 'pb-20 md:pb-0'
+        : 'max-w-5xl mx-auto px-4 py-6 pb-24 md:pb-10'
+      }>
         <Outlet />
       </main>
 
       {/* ── Desktop Footer ── */}
-      <footer className="hidden md:block mt-16 py-8 px-6 text-center border-t border-gray-200/60 bg-white/50">
+      <footer className="hidden md:block mt-16 py-8 px-6 text-center border-t border-white/5">
         <div className="flex items-center justify-center gap-2 mb-3">
           <img src="/logo.jpeg" alt="AMACOS" className="w-6 h-6 rounded-lg object-cover" />
-          <span className="font-bold text-[#1a3c5e] text-sm">AMACOS</span>
+          <span className="font-bold text-white text-sm">AMACOS</span>
         </div>
-        <p className="text-gray-400 text-xs mb-3">Mass Communication Department, Adeleke University</p>
-        <div className="flex justify-center gap-5 text-xs text-gray-400">
-          <Link to="/login"    className="hover:text-[#1a3c5e] transition">Sign In</Link>
-          <Link to="/register" className="hover:text-[#1a3c5e] transition">Register</Link>
-          <Link to="/about"    className="hover:text-[#1a3c5e] transition">About</Link>
+        <p className="text-gray-600 text-xs mb-3">Mass Communication Department, Adeleke University</p>
+        <div className="flex justify-center gap-5 text-xs text-gray-600">
+          <Link to="/login"    className="hover:text-white transition">Sign In</Link>
+          <Link to="/register" className="hover:text-white transition">Register</Link>
+          <Link to="/about"    className="hover:text-white transition">About</Link>
         </div>
       </footer>
 
       {/* ── Mobile Bottom Navigation ── */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-30 border-t border-gray-200/80"
-        style={{ background: 'rgba(255,255,255,0.97)', backdropFilter: 'blur(20px)' }}>
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-30 border-t border-white/5"
+        style={{ background: 'rgba(6,13,26,0.97)', backdropFilter: 'blur(20px)' }}>
         <div className="flex items-center justify-around px-2 py-1.5 safe-bottom">
           {mobileNav.map(item => (
             <NavLink key={item.path} to={item.path}
               className={({ isActive }) =>
                 `flex flex-col items-center gap-0.5 px-3 py-2 rounded-2xl transition-all duration-200 min-w-0 flex-1 ${
                   isActive
-                    ? 'text-[#1a3c5e]'
-                    : 'text-gray-400 hover:text-[#1a3c5e]'
+                    ? 'text-amber-400'
+                    : 'text-gray-600 hover:text-gray-300'
                 }`
               }>
               {({ isActive }) => (
                 <>
-                  <div className={`p-1.5 rounded-xl transition-all duration-200 ${isActive ? 'bg-[#1a3c5e]/10' : ''}`}>
+                  <div className={`p-1.5 rounded-xl transition-all duration-200 ${isActive ? 'bg-amber-400/10' : ''}`}>
                     <item.icon size={18} strokeWidth={isActive ? 2.5 : 1.8} />
                   </div>
                   <span className={`text-[10px] font-medium truncate ${isActive ? 'font-bold' : ''}`}>
