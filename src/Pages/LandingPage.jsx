@@ -420,7 +420,7 @@ export default function LandingPage() {
                           className="flex flex-col sm:flex-row gap-3 justify-center mt-2"
                           style={{ animation: 'itemReveal 0.5s ease 0.4s both' }}
                         >
-                          <Link to="/explore"
+                          <Link to="/social"
                             className="cta-pop inline-flex items-center justify-center gap-2 bg-white text-[#0d1f35] font-bold px-8 py-4 rounded-2xl shadow-xl text-base"
                             style={{ animationDelay: '0s' }}>
                             <Globe size={18} /> Explore Now

@@ -26,8 +26,8 @@ export default function Events() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-display font-bold text-[#1a3c5e]">Events Calendar</h1>
-        <p className="text-gray-500 text-sm mt-1">Upcoming department events and activities</p>
+        <h1 className="text-2xl font-display font-bold text-[#1a3c5e]">Events</h1>
+        <p className="text-gray-500 text-sm mt-1">Department events and activities</p>
       </div>
 
       {loading && (
@@ -44,7 +44,7 @@ export default function Events() {
 
       {!loading && upcoming.length > 0 && (
         <div className="mb-8">
-          <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Upcoming</h2>
+          <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Coming Up</h2>
           <div className="grid gap-4">
             {upcoming.map(ev => <EventCard key={ev._id} ev={ev} />)}
           </div>

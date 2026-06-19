@@ -426,7 +426,7 @@ function EmojiPicker({ onEmoji, onSticker, onSendCustomSticker, onClose }) {
 
 // ── Camera Modal ───────────────────────────────────────────────────────────────
 function CameraModal({ open, onClose, user, onPost }) {
-  const [stage, setStage] = useState('camera')
+  const [stage, setStage] = useState('compose')
   const [mode, setMode] = useState('photo')
   const [advancedMode, setAdvancedMode] = useState(false)
   const [stream, setStream] = useState(null)
@@ -478,7 +478,7 @@ function CameraModal({ open, onClose, user, onPost }) {
   useEffect(() => { if (!open) resetAll() }, [open])
 
   const resetAll = () => {
-    setCaptured(null); setContent(''); setStage('camera')
+    setCaptured(null); setContent(''); setStage('compose')
     setEffect(EFFECTS[0]); setThumbSrc(null); setRecSecs(0); setRecording(false)
   }
 
@@ -582,6 +582,79 @@ function CameraModal({ open, onClose, user, onPost }) {
   const handleClose = () => { stopCam(); stopRec(); resetAll(); onClose() }
 
   if (!open) return null
+
+  if (stage === 'compose') return (
+    <div className="fixed inset-0 z-50 flex flex-col" style={{ background: '#080f1c' }}>
+      {/* Header */}
+      <div className="flex items-center justify-between px-5 py-4 border-b border-white/10 flex-shrink-0">
+        <button onClick={handleClose} className="text-white/60 hover:text-white transition text-sm font-semibold">
+          Cancel
+        </button>
+        <h2 className="font-bold text-white text-sm tracking-wide">Create Post</h2>
+        <button onClick={handlePost} disabled={posting || (!content.trim() && !captured)}
+          className="bg-amber-400 disabled:opacity-40 disabled:cursor-not-allowed text-[#0d1f35] font-black text-sm px-5 py-1.5 rounded-full transition-all hover:bg-amber-300 flex items-center gap-1.5">
+          {posting ? <><Loader2 size={13} className="animate-spin" /> Posting…</> : 'Post'}
+        </button>
+      </div>
+
+      {/* Text area */}
+      <div className="flex-1 overflow-y-auto p-5">
+        <div className="flex gap-3">
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-amber-500 flex items-center justify-center text-[#0d1f35] font-bold text-sm flex-shrink-0 mt-0.5 shadow-lg shadow-amber-500/20">
+            {user?.avatar
+              ? <img src={user.avatar} alt="" className="w-full h-full object-cover rounded-full" />
+              : user?.fullName?.charAt(0)?.toUpperCase()
+            }
+          </div>
+          <div className="flex-1">
+            <p className="text-white/50 text-xs font-semibold mb-1">{user?.fullName}</p>
+            <textarea autoFocus value={content} onChange={e => setContent(e.target.value)}
+              placeholder="What's on your mind?"
+              rows={5}
+              className="w-full bg-transparent text-white placeholder-white/25 text-base leading-relaxed resize-none focus:outline-none" />
+          </div>
+        </div>
+
+        {/* Attached media preview */}
+        {captured && (
+          <div className="mt-4 relative rounded-2xl overflow-hidden bg-black/40 border border-white/10">
+            {captured.type === 'video'
+              ? <video src={captured.url} className="w-full max-h-64 object-contain" playsInline controls={false} />
+              : <img src={captured.url} alt="" className="w-full max-h-64 object-cover" />
+            }
+            <button onClick={() => setCaptured(null)}
+              className="absolute top-2 right-2 w-7 h-7 bg-black/70 rounded-full flex items-center justify-center text-white hover:bg-black transition">
+              <X size={14} />
+            </button>
+            <span className="absolute bottom-2 left-2 text-xs text-white/60 bg-black/50 px-2 py-0.5 rounded-full capitalize">{captured.type}</span>
+          </div>
+        )}
+      </div>
+
+      {/* Toolbar */}
+      <div className="border-t border-white/10 px-5 py-3 flex-shrink-0">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <button onClick={() => setStage('camera')}
+              className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-white/60 hover:text-white text-sm font-medium transition">
+              <Camera size={16} /> Camera
+            </button>
+            <button onClick={() => fileRef.current?.click()}
+              className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-white/60 hover:text-white text-sm font-medium transition">
+              <ImageIcon size={16} /> Gallery
+            </button>
+          </div>
+          <button onClick={() => setIsPublic(v => !v)}
+            className={`flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full border transition ${
+              isPublic ? 'border-blue-500/40 bg-blue-500/10 text-blue-300' : 'border-amber-400/40 bg-amber-400/10 text-amber-300'
+            }`}>
+            {isPublic ? <><Globe size={11} /> Public</> : <><Lock size={11} /> AMACOS Only</>}
+          </button>
+        </div>
+      </div>
+      <input ref={fileRef} type="file" accept="*" className="hidden" onChange={handleGallery} />
+    </div>
+  )
 
   const CIRC = 2 * Math.PI * 38
 
@@ -1563,20 +1636,31 @@ export default function SocialFeed() {
   const [posts, setPosts] = useState([])
   const [loading, setLoading] = useState(true)
   const [fetchError, setFetchError] = useState(false)
+  const [hasMore, setHasMore] = useState(false)
+  const [loadingMore, setLoadingMore] = useState(false)
   const [tab, setTab] = useState('all')
   const [cameraOpen, setCameraOpen] = useState(false)
   const [dmOpen, setDmOpen] = useState(false)
   const [commentPost, setCommentPost] = useState(null)
   const [sharePost, setSharePost] = useState(null)
+  const pageRef = useRef(1)
+  const loadingMoreRef = useRef(false)
+  const hasMoreRef = useRef(false)
+  const sentinelRef = useRef()
 
   const displayPosts = tab === 'amacos' ? posts.filter(p => !p.isPublic) : posts
 
   const loadPosts = useCallback(() => {
     setLoading(true)
     setFetchError(false)
-    const url = user ? '/api/posts' : '/api/posts/public'
+    pageRef.current = 1
+    const url = user ? '/api/posts?page=1&limit=12' : '/api/posts/public?page=1&limit=12'
     axios.get(url)
-      .then(res => setPosts(res.data.posts || []))
+      .then(res => {
+        setPosts(res.data.posts || [])
+        hasMoreRef.current = res.data.hasMore || false
+        setHasMore(res.data.hasMore || false)
+      })
       .catch(() => {
         setFetchError(true)
         toast.error('Could not load posts. Server may be starting up — try again.')
@@ -1588,6 +1672,33 @@ export default function SocialFeed() {
     if (authLoading) return
     loadPosts()
   }, [authLoading, loadPosts])
+
+  // Infinite scroll sentinel
+  useEffect(() => {
+    const sentinel = sentinelRef.current
+    if (!sentinel) return
+    const observer = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting || !hasMoreRef.current || loadingMoreRef.current) return
+      loadingMoreRef.current = true
+      setLoadingMore(true)
+      const nextPage = pageRef.current + 1
+      const url = user ? `/api/posts?page=${nextPage}&limit=12` : `/api/posts/public?page=${nextPage}&limit=12`
+      axios.get(url)
+        .then(res => {
+          const newPosts = res.data.posts || []
+          if (newPosts.length > 0) {
+            setPosts(prev => [...prev, ...newPosts])
+            pageRef.current = nextPage
+          }
+          hasMoreRef.current = res.data.hasMore || false
+          setHasMore(res.data.hasMore || false)
+        })
+        .catch(() => {})
+        .finally(() => { loadingMoreRef.current = false; setLoadingMore(false) })
+    }, { threshold: 0.5 })
+    observer.observe(sentinel)
+    return () => observer.disconnect()
+  }, [user])
 
   const handlePost = (p) => setPosts(prev => [p, ...prev])
 
@@ -1694,6 +1805,17 @@ export default function SocialFeed() {
         ))}
 
         {!user && posts.length > 0 && <SignInPrompt feature="posting, liking and full interaction" />}
+
+        {/* Infinite scroll sentinel */}
+        <div ref={sentinelRef} className="h-4" />
+        {loadingMore && (
+          <div className="flex justify-center py-4">
+            <Loader2 size={20} className="animate-spin text-gray-300" />
+          </div>
+        )}
+        {!hasMore && !loading && !fetchError && posts.length > 3 && (
+          <p className="text-center text-xs text-gray-300 py-4 pb-8">You're all caught up ✓</p>
+        )}
       </div>
 
       {/* ── FAB ── */}
