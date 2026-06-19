@@ -21,52 +21,58 @@ export default function NewsFeed() {
   const [error, setError] = useState(false)
 
   useEffect(() => {
-    axios
-      .get('/api/news')
+    axios.get('/api/news')
       .then((res) => setNews(res.data.news || []))
       .catch(() => setError(true))
       .finally(() => setLoading(false))
   }, [])
 
   return (
-    <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-display font-bold text-[#1a3c5e]">News Feed</h1>
+    <div className="pt-2">
+      <div className="mb-8 px-1">
+        <h1 className="text-2xl font-bold text-white">News Feed</h1>
         <p className="text-gray-500 text-sm mt-1">Department news and announcements</p>
       </div>
 
       {loading && (
-        <div className="grid gap-4 mb-8">
+        <div className="divide-y divide-white/5">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="bg-white rounded-2xl border border-gray-100 h-40 animate-pulse" />
+            <div key={i} className="py-4 flex gap-4 animate-pulse">
+              <div className="w-24 h-20 bg-white/5 rounded-xl flex-shrink-0" />
+              <div className="flex-1 space-y-2 pt-1">
+                <div className="h-2.5 bg-white/5 rounded-full w-24" />
+                <div className="h-3.5 bg-white/10 rounded-full w-3/4" />
+                <div className="h-2.5 bg-white/5 rounded-full w-full" />
+                <div className="h-2.5 bg-white/5 rounded-full w-2/3" />
+              </div>
+            </div>
           ))}
         </div>
       )}
 
       {!loading && error && (
-        <div className="text-center py-20 text-red-400">
-          <Newspaper size={48} className="mx-auto mb-3 opacity-30" />
-          <p className="font-medium">Could not load news</p>
-          <p className="text-sm text-gray-400 mt-1">Make sure the server is running, then refresh.</p>
+        <div className="py-20 text-center">
+          <Newspaper size={40} className="mx-auto mb-3 text-gray-700" />
+          <p className="text-gray-400 font-medium">Could not load news</p>
+          <p className="text-gray-600 text-sm mt-1">Make sure the server is running, then refresh.</p>
         </div>
       )}
 
       {!loading && !error && news.length === 0 && (
-        <div className="text-center py-20 text-gray-400">
-          <Newspaper size={48} className="mx-auto mb-3 opacity-30" />
-          <p>No news published yet.</p>
+        <div className="py-20 text-center">
+          <Newspaper size={40} className="mx-auto mb-3 text-gray-700" />
+          <p className="text-gray-400">No news published yet.</p>
         </div>
       )}
 
       {!loading && !error && news.length > 0 && (
-        <div className="grid gap-4 mb-8">
+        <div className="divide-y divide-white/5">
           {news.map((item) => (
             <Link
               key={item._id}
               to={`${isApp ? '/app' : ''}/news/${item._id}`}
-              className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-md hover:border-[#1a3c5e]/20 transition group flex flex-col sm:flex-row">
-              {/* Thumbnail */}
-              <div className="sm:w-48 sm:flex-shrink-0 h-40 sm:h-auto bg-[#1a3c5e]/10 overflow-hidden">
+              className="py-4 flex gap-4 group block">
+              <div className="w-24 h-20 flex-shrink-0 rounded-xl overflow-hidden bg-[#1a3c5e]/30">
                 {item.imageUrl ? (
                   <img
                     src={item.imageUrl}
@@ -74,46 +80,32 @@ export default function NewsFeed() {
                     className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
                   />
                 ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-[#1a3c5e] to-[#2563a8] flex items-center justify-center">
-                    <Newspaper size={32} className="text-white/20" />
+                  <div className="w-full h-full flex items-center justify-center">
+                    <Newspaper size={22} className="text-white/20" />
                   </div>
                 )}
               </div>
-
-              {/* Text */}
-              <div className="p-5 flex flex-col justify-between flex-1">
-                <div>
-                  <div className="flex flex-wrap items-center gap-3 mb-2 text-xs text-gray-400">
-                    <span className="flex items-center gap-1">
-                      <Calendar size={12} /> {fmtDate(item.createdAt)}
-                    </span>
-                    {item.author?.fullName && (
-                      <span className="flex items-center gap-1">
-                        <User size={12} /> {item.author.fullName}
-                      </span>
-                    )}
-                  </div>
-                  <h3 className="font-semibold text-[#1a3c5e] text-base leading-snug mb-2 group-hover:text-[#2563a8] transition-colors">
-                    {item.title}
-                  </h3>
-                  <p className="text-gray-500 text-sm line-clamp-3">
-                    {truncate(item.content, 200)}
-                  </p>
+              <div className="flex-1 min-w-0">
+                <div className="flex flex-wrap items-center gap-3 mb-1.5 text-xs text-gray-600">
+                  <span className="flex items-center gap-1"><Calendar size={11} /> {fmtDate(item.createdAt)}</span>
+                  {item.author?.fullName && (
+                    <span className="flex items-center gap-1"><User size={11} /> {item.author.fullName}</span>
+                  )}
                 </div>
-                <span className="text-[#1a3c5e] text-xs font-semibold mt-3 group-hover:underline">
-                  Read more →
-                </span>
+                <h3 className="font-semibold text-white text-sm leading-snug mb-1.5 group-hover:text-amber-400 transition-colors line-clamp-2">
+                  {item.title}
+                </h3>
+                <p className="text-gray-500 text-xs line-clamp-2">
+                  {truncate(item.content, 160)}
+                </p>
               </div>
             </Link>
           ))}
         </div>
       )}
 
-      {!user && (
-        <div className="mt-4">
-          <p className="text-center text-gray-400 text-sm mb-4">
-            Sign in to post, comment and interact with news
-          </p>
+      {!user && news.length > 0 && (
+        <div className="mt-6">
           <SignInPrompt feature="full news feed interaction" />
         </div>
       )}

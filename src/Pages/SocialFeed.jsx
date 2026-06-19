@@ -548,41 +548,51 @@ function CameraModal({ open, onClose, user, onPost }) {
     e.target.value = ''
   }
 
-  const handlePost = async () => {
+  const handlePost = () => {
     if (!content.trim() && !captured) return toast.error('Write something or capture media.')
-    setPosting(true)
-    const isVid = captured?.type === 'video'
-    const tid = captured && isVid ? toast.loading('Uploading video…') : null
-    try {
-      const fd = new FormData()
-      fd.append('content', content)
-      fd.append('isPublic', isPublic)
-      if (captured) {
-        let blob = captured.rawBlob
-        if (captured.type === 'image' && effect.id !== 'normal') {
-          blob = await bakeEffect(captured.url, captureCss(effect)) || blob
+
+    // Snapshot everything needed before closing the modal
+    const snap = { content, captured, isPublic, effect }
+    resetAll()
+    onClose()
+
+    // Fire-and-forget upload — user can keep using the app
+    const tid = toast.loading(snap.captured ? 'Uploading media…' : 'Posting…', { duration: Infinity })
+
+    const doUpload = async () => {
+      try {
+        const fd = new FormData()
+        fd.append('content', snap.content)
+        fd.append('isPublic', snap.isPublic)
+        if (snap.captured) {
+          let blob = snap.captured.rawBlob
+          if (snap.captured.type === 'image' && snap.effect.id !== 'normal') {
+            blob = await bakeEffect(snap.captured.url, captureCss(snap.effect)) || blob
+          }
+          fd.append('media', new File([blob], snap.captured.fileName, { type: snap.captured.mimeType }))
         }
-        fd.append('media', new File([blob], captured.fileName, { type: captured.mimeType }))
+        const token = localStorage.getItem('amacos_token')
+        const { data } = await axios.post('/api/posts', fd, {
+          withCredentials: true,
+          timeout: snap.captured?.type === 'video' ? 300000 : snap.captured ? 60000 : 15000,
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        })
+        toast.dismiss(tid)
+        try { onPost(data.post) } catch { /* feed may have unmounted */ }
+        toast.success('Post published! Scroll up to view it.', { duration: 5000 })
+      } catch (err) {
+        toast.dismiss(tid)
+        const isConnErr = !err.response && (err.code === 'ERR_NETWORK' || err.message === 'Network Error')
+        toast.error(
+          isConnErr
+            ? 'Connection lost. Wait a moment and try posting again.'
+            : err.response?.data?.message || (err.code === 'ECONNABORTED' ? 'Upload timed out. Try a smaller file.' : 'Post failed. Please try again.'),
+          { duration: 6000 }
+        )
       }
-      const token = localStorage.getItem('amacos_token')
-      const { data } = await axios.post('/api/posts', fd, {
-        withCredentials: true,
-        timeout: isVid ? 300000 : captured ? 60000 : 15000,
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      })
-      if (tid) toast.dismiss(tid)
-      onPost(data.post)
-      toast.success('Posted!')
-      resetAll(); onClose()
-    } catch (err) {
-      if (tid) toast.dismiss(tid)
-      const isConnErr = !err.response && (err.code === 'ERR_NETWORK' || err.message === 'Network Error' || err.code === 'ERR_CONNECTION_CLOSED')
-      toast.error(
-        isConnErr
-          ? 'Server is waking up. Wait 30 seconds and try again.'
-          : err.response?.data?.message || (err.code === 'ECONNABORTED' ? 'Upload timed out.' : err.message)
-      )
-    } finally { setPosting(false) }
+    }
+
+    doUpload()
   }
 
   const retake = () => { setCaptured(null); setEffect(EFFECTS[0]); setStage('camera') }
@@ -598,9 +608,9 @@ function CameraModal({ open, onClose, user, onPost }) {
           Cancel
         </button>
         <h2 className="font-bold text-white text-sm tracking-wide">Create Post</h2>
-        <button onClick={handlePost} disabled={posting || (!content.trim() && !captured)}
-          className="bg-amber-400 disabled:opacity-40 disabled:cursor-not-allowed text-[#0d1f35] font-black text-sm px-5 py-1.5 rounded-full transition-all hover:bg-amber-300 flex items-center gap-1.5">
-          {posting ? <><Loader2 size={13} className="animate-spin" /> Posting…</> : 'Post'}
+        <button onClick={handlePost} disabled={!content.trim() && !captured}
+          className="bg-amber-400 disabled:opacity-40 disabled:cursor-not-allowed text-[#0d1f35] font-black text-sm px-5 py-1.5 rounded-full transition-all hover:bg-amber-300">
+          Post
         </button>
       </div>
 
@@ -802,9 +812,8 @@ function CameraModal({ open, onClose, user, onPost }) {
           className="flex items-center gap-1.5 text-white/80 hover:text-white transition text-sm font-bold">
           <ArrowLeft size={18} /> Retake
         </button>
-        <button onClick={handlePost} disabled={posting || (!content.trim() && !captured)}
-          className="px-6 py-2 bg-amber-400 hover:bg-amber-300 text-[#1a3c5e] text-sm font-black rounded-full disabled:opacity-40 transition flex items-center gap-1.5">
-          {posting && <Loader2 size={13} className="animate-spin" />}
+        <button onClick={handlePost} disabled={!content.trim() && !captured}
+          className="px-6 py-2 bg-amber-400 hover:bg-amber-300 text-[#1a3c5e] text-sm font-black rounded-full disabled:opacity-40 transition">
           Post
         </button>
       </div>
