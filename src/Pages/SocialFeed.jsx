@@ -574,7 +574,12 @@ function CameraModal({ open, onClose, user, onPost }) {
       resetAll(); onClose()
     } catch (err) {
       if (tid) toast.dismiss(tid)
-      toast.error(err.response?.data?.message || (err.code === 'ECONNABORTED' ? 'Upload timed out.' : err.message))
+      const isConnErr = !err.response && (err.code === 'ERR_NETWORK' || err.message === 'Network Error' || err.code === 'ERR_CONNECTION_CLOSED')
+      toast.error(
+        isConnErr
+          ? 'Server is waking up. Wait 30 seconds and try again.'
+          : err.response?.data?.message || (err.code === 'ECONNABORTED' ? 'Upload timed out.' : err.message)
+      )
     } finally { setPosting(false) }
   }
 
@@ -1649,22 +1654,27 @@ export default function SocialFeed() {
 
   const displayPosts = tab === 'amacos' ? posts.filter(p => !p.isPublic) : posts
 
-  const loadPosts = useCallback(() => {
+  const loadPosts = useCallback(async (attempt = 0) => {
     setLoading(true)
     setFetchError(false)
     pageRef.current = 1
     const url = user ? '/api/posts?page=1&limit=12' : '/api/posts/public?page=1&limit=12'
-    axios.get(url)
-      .then(res => {
-        setPosts(res.data.posts || [])
-        hasMoreRef.current = res.data.hasMore || false
-        setHasMore(res.data.hasMore || false)
-      })
-      .catch(() => {
-        setFetchError(true)
-        toast.error('Could not load posts. Server may be starting up — try again.')
-      })
-      .finally(() => setLoading(false))
+    try {
+      const res = await axios.get(url)
+      setPosts(res.data.posts || [])
+      hasMoreRef.current = res.data.hasMore || false
+      setHasMore(res.data.hasMore || false)
+      setLoading(false)
+    } catch {
+      if (attempt < 4) {
+        // Server cold start — keep skeleton visible, silently retry
+        await new Promise(r => setTimeout(r, 6000))
+        return loadPosts(attempt + 1)
+      }
+      setFetchError(true)
+      setLoading(false)
+      toast.error('Server is not responding. Please try again in a minute.')
+    }
   }, [user])
 
   useEffect(() => {
