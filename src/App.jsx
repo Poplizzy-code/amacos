@@ -31,6 +31,7 @@ import Explore from './Pages/Explore'
 import Settings from './Pages/Settings'
 import Filters from './Pages/Filters'
 import Groups from './Pages/Groups'
+import StudentPanel from './Pages/StudentPanel'
 
 const Spinner = () => (
   <div className="flex items-center justify-center h-screen bg-[#f8fafc]">
@@ -52,6 +53,14 @@ const AdminRoute = ({ children }) => {
   if (loading) return <Spinner />
   if (!user) return <Navigate to="/login" />
   if (!user.isStaffAdmin) return <Navigate to="/app/dashboard" />
+  return children
+}
+
+const StudentAdminRoute = ({ children }) => {
+  const { user, loading } = useAuth()
+  if (loading) return <Spinner />
+  if (!user) return <Navigate to="/login" />
+  if (!user.isStudentAdmin) return <Navigate to="/app/dashboard" />
   return children
 }
 
@@ -120,6 +129,7 @@ const AppRoutes = () => {
         <Route path="messages" element={<Messages />} />
         <Route path="notifications" element={<Notifications />} />
         <Route path="admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+        <Route path="student-panel" element={<StudentAdminRoute><StudentPanel /></StudentAdminRoute>} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" />} />

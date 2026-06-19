@@ -8,7 +8,7 @@ import {
   Monitor, Code2, Rss, Newspaper, Star, Megaphone,
   FlaskConical, Calendar, Users, Mail, Bell, Shield,
   Info, LogOut, Menu, X, ClipboardList,
-  GraduationCap, ChevronRight, Settings, ArrowLeft,
+  GraduationCap, ChevronRight, Settings, ArrowLeft, ShieldCheck,
 } from 'lucide-react'
 
 const navItems = [
@@ -30,6 +30,7 @@ const navItems = [
   { label: 'Notifications',        path: '/app/notifications',  icon: Bell },
   { label: 'Tech Community',       path: '/app/tech',           icon: Code2,         techOnly: true },
   { label: 'Staff Panel',          path: '/app/staff-panel',    icon: GraduationCap, staffOnly: true },
+  { label: 'Student Panel',        path: '/app/student-panel',  icon: ShieldCheck,   studentAdminOnly: true },
   { label: 'Admin',                path: '/app/admin',          icon: Shield,        staffAdminOnly: true },
   { label: 'Settings',             path: '/app/settings',       icon: Settings },
   { label: 'About',                path: '/about',              icon: Info },
@@ -52,6 +53,7 @@ export default function MainLayout() {
   const filteredNav = navItems.filter(item => {
     if (item.staffOnly && user?.accountType !== 'staff') return false
     if (item.staffAdminOnly && !user?.isStaffAdmin)      return false
+    if (item.studentAdminOnly && !user?.isStudentAdmin)  return false
     if (item.techOnly && !user?.isTechMember)             return false
     return true
   })

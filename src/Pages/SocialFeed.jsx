@@ -1559,9 +1559,10 @@ function PostCard({ post, currentUser, onDelete, onLike, onOpenComments, onShare
 
 // ── Main ───────────────────────────────────────────────────────────────────────
 export default function SocialFeed() {
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const [posts, setPosts] = useState([])
   const [loading, setLoading] = useState(true)
+  const [fetchError, setFetchError] = useState(false)
   const [tab, setTab] = useState('all')
   const [cameraOpen, setCameraOpen] = useState(false)
   const [dmOpen, setDmOpen] = useState(false)
@@ -1570,13 +1571,23 @@ export default function SocialFeed() {
 
   const displayPosts = tab === 'amacos' ? posts.filter(p => !p.isPublic) : posts
 
-  useEffect(() => {
+  const loadPosts = useCallback(() => {
+    setLoading(true)
+    setFetchError(false)
     const url = user ? '/api/posts' : '/api/posts/public'
-    axios.get(url, user ? { withCredentials: true } : {})
+    axios.get(url)
       .then(res => setPosts(res.data.posts || []))
-      .catch(() => toast.error('Could not load posts. Is the server running?'))
+      .catch(() => {
+        setFetchError(true)
+        toast.error('Could not load posts. Server may be starting up — try again.')
+      })
       .finally(() => setLoading(false))
   }, [user])
+
+  useEffect(() => {
+    if (authLoading) return
+    loadPosts()
+  }, [authLoading, loadPosts])
 
   const handlePost = (p) => setPosts(prev => [p, ...prev])
 
@@ -1649,7 +1660,21 @@ export default function SocialFeed() {
           </div>
         ))}
 
-        {!loading && displayPosts.length === 0 && (
+        {!loading && fetchError && (
+          <div className="bg-white rounded-3xl p-12 text-center border border-gray-100 shadow-sm">
+            <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-3">
+              <AlertCircle size={28} className="text-red-400" />
+            </div>
+            <p className="font-bold text-gray-600">Couldn't load posts</p>
+            <p className="text-sm text-gray-400 mt-1">The server may be waking up. Please try again.</p>
+            <button onClick={loadPosts}
+              className="mt-4 px-5 py-2 bg-[#1a3c5e] text-white text-sm font-bold rounded-xl hover:bg-[#152f4a] transition flex items-center gap-2 mx-auto">
+              <RefreshCw size={14} /> Try Again
+            </button>
+          </div>
+        )}
+
+        {!loading && !fetchError && displayPosts.length === 0 && (
           <div className="bg-white rounded-3xl p-12 text-center border border-gray-100 shadow-sm">
             <div className="w-16 h-16 bg-[#1a3c5e]/5 rounded-full flex items-center justify-center mx-auto mb-3">
               <Camera size={28} className="text-[#1a3c5e]/30" />
@@ -1661,7 +1686,7 @@ export default function SocialFeed() {
           </div>
         )}
 
-        {!loading && displayPosts.map(post => (
+        {!loading && !fetchError && displayPosts.map(post => (
           <PostCard key={post._id} post={post} currentUser={user}
             onDelete={handleDelete} onLike={handleLike}
             onOpenComments={setCommentPost}
