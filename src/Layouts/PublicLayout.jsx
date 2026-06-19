@@ -1,6 +1,6 @@
 import { Outlet, Link, NavLink } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { BookOpen, Menu, X } from 'lucide-react'
+import { Menu, X } from 'lucide-react'
 import { useState } from 'react'
 
 const publicNav = [
@@ -25,9 +25,7 @@ export default function PublicLayout() {
         style={{ background: 'linear-gradient(90deg, #060d1a 0%, #0d1f35 50%, #060d1a 100%)' }}>
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3 group">
-            <div className="w-8 h-8 bg-gradient-to-br from-amber-400 to-amber-500 rounded-xl flex items-center justify-center shadow-md shadow-amber-500/20 group-hover:scale-110 transition-transform duration-200">
-              <BookOpen size={15} className="text-[#0d1f35]" />
-            </div>
+            <img src="/logo.jpeg" alt="AMACOS" className="w-8 h-8 rounded-xl object-cover flex-shrink-0 group-hover:scale-110 transition-transform duration-200 shadow-md" />
             <div>
               <p className="text-white font-bold text-sm tracking-wide">AMACOS</p>
               <p className="text-blue-500 text-xs hidden sm:block">Adeleke University</p>
@@ -102,9 +100,7 @@ export default function PublicLayout() {
       {/* Footer */}
       <footer className="mt-16 py-8 px-6 text-center border-t border-gray-200/60 bg-white/50">
         <div className="flex items-center justify-center gap-2 mb-3">
-          <div className="w-6 h-6 bg-gradient-to-br from-amber-400 to-amber-500 rounded-lg flex items-center justify-center">
-            <BookOpen size={11} className="text-[#0d1f35]" />
-          </div>
+          <img src="/logo.jpeg" alt="AMACOS" className="w-6 h-6 rounded-lg object-cover" />
           <span className="font-bold text-[#1a3c5e] text-sm">AMACOS</span>
         </div>
         <p className="text-gray-400 text-xs mb-3">© 2025 Mass Communication Department, Adeleke University.</p>

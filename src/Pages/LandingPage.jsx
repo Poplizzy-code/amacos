@@ -22,9 +22,9 @@ function WelcomeGraphic() {
     <div className="relative flex items-center justify-center" style={{ width: 280, height: 280 }}>
       <div className="absolute inset-0 rounded-full border border-amber-400/20 animate-spin-slow" />
       <div className="absolute rounded-full border border-white/5" style={{ inset: 28 }} />
-      <div className="w-24 h-24 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-2xl z-10"
+      <div className="w-24 h-24 rounded-full overflow-hidden shadow-2xl z-10"
         style={{ boxShadow: '0 0 60px rgba(251,191,36,0.4)' }}>
-        <BookMarked size={40} className="text-[#0d1f35]" />
+        <img src="/logo.jpeg" alt="AMACOS" className="w-full h-full object-cover" />
       </div>
       {orbitItems.map(({ Icon, bg, deg }) => (
         <div key={deg}
@@ -319,9 +319,7 @@ export default function LandingPage() {
       {/* Navbar */}
       <nav className="relative z-20 flex-shrink-0 px-6 py-4 flex items-center justify-between border-b border-white/5">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-gradient-to-br from-amber-400 to-amber-500 rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/25">
-            <BookOpen size={17} className="text-[#1a3c5e]" />
-          </div>
+          <img src="/logo.jpeg" alt="AMACOS" className="w-9 h-9 rounded-xl object-cover flex-shrink-0 shadow-lg" />
           <div>
             <p className="text-white font-bold text-sm tracking-wide">AMACOS</p>
             <p className="text-blue-400 text-xs hidden sm:block">Adeleke University</p>

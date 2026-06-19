@@ -7,7 +7,7 @@ import {
   LayoutDashboard, BookOpen, FileQuestion, MessageSquare,
   Monitor, Code2, Rss, Newspaper, Star, Megaphone,
   FlaskConical, Calendar, Users, Mail, Bell, Shield,
-  Info, LogOut, Menu, X, BookMarked, ClipboardList,
+  Info, LogOut, Menu, X, ClipboardList,
   GraduationCap, ChevronRight, Settings, ArrowLeft,
 } from 'lucide-react'
 
@@ -82,9 +82,7 @@ export default function MainLayout() {
         {/* Logo */}
         <div className="flex items-center justify-between px-5 py-5 border-b border-white/5">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-gradient-to-br from-amber-400 to-amber-500 rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/20 flex-shrink-0">
-              <BookMarked size={16} className="text-[#0d1f35]" />
-            </div>
+            <img src="/logo.jpeg" alt="AMACOS" className="w-9 h-9 rounded-xl object-cover flex-shrink-0 shadow-lg" />
             <div>
               <p className="text-white font-bold text-sm tracking-wide">AMACOS</p>
               <p className="text-blue-500 text-xs">Adeleke University</p>
