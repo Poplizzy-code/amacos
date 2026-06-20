@@ -307,9 +307,10 @@ export default function ElectionDetail() {
       {isAdmin && (
         <div className="flex gap-1 mb-6 border-b border-gray-200">
           {[
-            { id: 'overview',  label: 'Overview' },
-            { id: 'aspirants', label: `Aspirants${allAspirants.length ? ` (${allAspirants.length})` : ''}` },
-            { id: 'results',   label: 'Results' },
+            { id: 'overview',     label: 'Overview' },
+            { id: 'aspirants',    label: `Aspirants${allAspirants.length ? ` (${allAspirants.length})` : ''}` },
+            { id: 'results',      label: 'Results' },
+            { id: 'participate',  label: 'Participate' },
           ].map(t => (
             <button key={t.id} onClick={() => { setAdminTab(t.id); if (t.id === 'aspirants') loadAllAspirants(); if (t.id === 'results') loadResults() }}
               className={`px-4 py-2 text-sm font-semibold border-b-2 transition -mb-px ${
@@ -448,8 +449,8 @@ export default function ElectionDetail() {
         </div>
       )}
 
-      {/* ── Student views ── */}
-      {!isAdmin && (
+      {/* ── Student views (also shown to admin via Participate tab) ── */}
+      {(!isAdmin || adminTab === 'participate') && (
         <>
           {/* Draft */}
           {election.status === 'draft' && (
