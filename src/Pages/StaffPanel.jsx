@@ -1,29 +1,33 @@
 import { useState, useEffect, useRef } from 'react'
 import axios from 'axios'
 import toast from 'react-hot-toast'
+import { useAuth } from '../context/AuthContext'
 import {
   BookOpen, Monitor, ClipboardList, Upload, FileText,
   Trash2, Plus, X, Loader2, Eye, Image as ImageIcon,
-  Film, File
+  Film, File as FileIcon, CalendarClock, Users, Search,
+  RefreshCw, ChevronDown, ChevronUp,
 } from 'lucide-react'
 
 const TABS = [
-  { id: 'resources', label: 'Upload Resources', icon: BookOpen },
-  { id: 'cbt', label: 'CBT Questions', icon: Monitor },
-  { id: 'assignments', label: 'Assignments', icon: ClipboardList },
+  { id: 'resources',    label: 'Upload Resources', icon: BookOpen },
+  { id: 'cbt',          label: 'CBT Questions',    icon: Monitor },
+  { id: 'assignments',  label: 'Assignments',      icon: ClipboardList },
+  { id: 'session',      label: 'Session',          icon: CalendarClock, adminOnly: true },
+  { id: 'students',     label: 'Students',         icon: Users,         adminOnly: true },
 ]
 
 const UPLOAD_TYPES = [
-  { value: 'document', label: 'Document', icon: File, accept: '.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt' },
-  { value: 'image', label: 'Image', icon: ImageIcon, accept: 'image/*' },
-  { value: 'video', label: 'Video', icon: Film, accept: 'video/*' },
+  { value: 'document', label: 'Document', icon: FileIcon, accept: '.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt' },
+  { value: 'image',    label: 'Image',    icon: ImageIcon, accept: 'image/*' },
+  { value: 'video',    label: 'Video',    icon: Film,      accept: 'video/*' },
 ]
 
 const RESOURCE_CATEGORIES = [
   { value: 'lecture-note', label: 'Lecture Note' },
-  { value: 'textbook', label: 'Textbook' },
-  { value: 'assignment', label: 'Assignment File' },
-  { value: 'other', label: 'Other' },
+  { value: 'textbook',     label: 'Textbook' },
+  { value: 'assignment',   label: 'Assignment File' },
+  { value: 'other',        label: 'Other' },
 ]
 
 function CenteredSpinner() {
@@ -74,7 +78,7 @@ function ResourcesTab() {
       const { data } = await axios.post('/api/admin/resources', fd, { withCredentials: true })
       setResources(prev => [data.resource, ...prev])
       setForm({ title: '', description: '', category: 'lecture-note' })
-      setFile(null); fileRef.current.value = ''
+      setFile(null); if (fileRef.current) fileRef.current.value = ''
       setShowForm(false)
       toast.success('Resource uploaded!')
     } catch (err) {
@@ -108,8 +112,6 @@ function ResourcesTab() {
       {showForm && (
         <form onSubmit={handleUpload} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-4">
           <h3 className="font-semibold text-[#1a3c5e]">Upload Resource</h3>
-
-          {/* Upload type selector */}
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-2">File Type</label>
             <div className="flex gap-2">
@@ -121,7 +123,6 @@ function ResourcesTab() {
               ))}
             </div>
           </div>
-
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1.5">Title *</label>
@@ -148,7 +149,7 @@ function ResourcesTab() {
               {file ? (
                 <div className="flex items-center justify-center gap-2 text-sm text-[#1a3c5e] font-medium">
                   <FileText size={18} /><span className="truncate max-w-xs">{file.name}</span>
-                  <button type="button" onClick={e => { e.stopPropagation(); setFile(null); fileRef.current.value = '' }} className="text-gray-400 hover:text-red-400"><X size={15} /></button>
+                  <button type="button" onClick={e => { e.stopPropagation(); setFile(null); if (fileRef.current) fileRef.current.value = '' }} className="text-gray-400 hover:text-red-400"><X size={15} /></button>
                 </div>
               ) : (
                 <><Upload size={22} className="mx-auto mb-2 text-gray-300" /><p className="text-sm text-gray-400">Click to select {uploadType}</p></>
@@ -204,7 +205,7 @@ function CBTTab() {
 
   const handleSave = async (e) => {
     e.preventDefault()
-    const { course, question, optionA, optionB, optionC, optionD, correctAnswer } = form
+    const { course, question, optionA, optionB, optionC, optionD } = form
     if (!course || !question || !optionA || !optionB || !optionC || !optionD) return toast.error('Please fill all fields.')
     setSaving(true)
     try {
@@ -411,7 +412,7 @@ function AssignmentsTab() {
               {file ? (
                 <div className="flex items-center justify-center gap-2 text-sm text-[#1a3c5e]">
                   <FileText size={16} />{file.name}
-                  <button type="button" onClick={e => { e.stopPropagation(); setFile(null); fileRef.current.value = '' }}><X size={13} className="text-gray-400" /></button>
+                  <button type="button" onClick={e => { e.stopPropagation(); setFile(null); if (fileRef.current) fileRef.current.value = '' }}><X size={13} className="text-gray-400" /></button>
                 </div>
               ) : <p className="text-sm text-gray-400">Click to attach file (optional)</p>}
             </div>
@@ -432,7 +433,7 @@ function AssignmentsTab() {
             return (
               <div key={a._id} className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm flex gap-4">
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
                     <h3 className="font-semibold text-[#1a3c5e] text-sm">{a.title}</h3>
                     <span className="text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">{a.course}</span>
                     {overdue && <span className="text-xs bg-red-50 text-red-500 px-2 py-0.5 rounded-full">Overdue</span>}
@@ -453,19 +454,249 @@ function AssignmentsTab() {
   )
 }
 
+// ── Session Tab (staff admin only) ─────────────────────────────────────────────
+function SessionTab() {
+  const [currentSession, setCurrentSession] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [editSession, setEditSession] = useState('')
+  const [editing, setEditing] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [promoting, setPromoting] = useState(false)
+  const [confirmPromote, setConfirmPromote] = useState(false)
+
+  useEffect(() => {
+    axios.get('/api/settings/session', { withCredentials: true })
+      .then(res => { setCurrentSession(res.data.currentSession || ''); setEditSession(res.data.currentSession || '') })
+      .catch(() => toast.error('Failed to load session.'))
+      .finally(() => setLoading(false))
+  }, [])
+
+  const getNext = (s) => {
+    if (!s) return ''
+    const [y1, y2] = s.split('/').map(Number)
+    if (!y1 || !y2) return ''
+    return `${y1 + 1}/${y2 + 1}`
+  }
+
+  const saveSession = async () => {
+    const val = editSession.trim()
+    if (!val) return toast.error('Session cannot be empty.')
+    if (!/^\d{4}\/\d{4}$/.test(val)) return toast.error('Format must be YYYY/YYYY, e.g. 2026/2027')
+    setSaving(true)
+    try {
+      const { data } = await axios.put('/api/settings/session', { currentSession: val }, { withCredentials: true })
+      setCurrentSession(data.currentSession)
+      setEditing(false)
+      toast.success(`Session updated to ${data.currentSession}.`)
+    } catch (err) { toast.error(err.response?.data?.message || 'Failed to update session.') }
+    finally { setSaving(false) }
+  }
+
+  const promoteAll = async () => {
+    setPromoting(true)
+    try {
+      const { data } = await axios.put('/api/settings/session/promote', {}, { withCredentials: true })
+      setConfirmPromote(false)
+      toast.success(`${data.totalPromoted} students promoted to next level.`)
+    } catch (err) { toast.error(err.response?.data?.message || 'Failed to promote students.') }
+    finally { setPromoting(false) }
+  }
+
+  if (loading) return <CenteredSpinner />
+
+  const next = getNext(currentSession)
+
+  return (
+    <div className="space-y-4 max-w-lg">
+      <h2 className="font-bold text-[#1a3c5e] text-lg">Academic Session Management</h2>
+
+      {/* Current session card */}
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-5">
+        <div className="flex items-center gap-4">
+          <div className="w-14 h-14 bg-amber-50 rounded-2xl flex items-center justify-center flex-shrink-0">
+            <CalendarClock size={24} className="text-amber-500" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs text-gray-400 uppercase tracking-wide font-semibold mb-0.5">Current Session</p>
+            {editing ? (
+              <div className="flex items-center gap-2">
+                <input value={editSession} onChange={e => setEditSession(e.target.value)} placeholder="e.g. 2026/2027"
+                  className="w-36 px-2 py-1.5 text-lg font-bold border border-[#1a3c5e] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a3c5e]/20" />
+                <button onClick={saveSession} disabled={saving}
+                  className="flex items-center gap-1 px-3 py-1.5 bg-[#1a3c5e] text-white text-xs font-bold rounded-lg disabled:opacity-60">
+                  {saving ? <Loader2 size={12} className="animate-spin" /> : 'Save'}
+                </button>
+                <button onClick={() => { setEditing(false); setEditSession(currentSession) }}
+                  className="px-2 py-1.5 text-gray-400 hover:text-gray-600 text-xs">Cancel</button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-3">
+                <p className="text-3xl font-bold text-[#1a3c5e]">{currentSession || 'Not set'}</p>
+                <button onClick={() => setEditing(true)} className="text-xs text-[#1a3c5e] underline">Edit</button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Promote students section */}
+        <div className="border-t border-gray-100 pt-5 space-y-3">
+          <p className="text-sm font-semibold text-gray-700">Promote All Students</p>
+          <div className="bg-blue-50 rounded-xl p-4 text-sm">
+            <p className="font-semibold text-blue-800 mb-2">This will promote students as follows:</p>
+            <ul className="text-blue-700 space-y-1 text-xs">
+              <li>→ 100L → 200L</li>
+              <li>→ 200L → 300L</li>
+              <li>→ 300L → 400L</li>
+              <li>→ 400L stays at 400L</li>
+            </ul>
+          </div>
+          {!confirmPromote ? (
+            <button onClick={() => setConfirmPromote(true)}
+              className="flex items-center gap-2 bg-amber-400 hover:bg-amber-300 text-[#1a3c5e] font-bold text-sm px-5 py-2.5 rounded-xl transition">
+              <RefreshCw size={15} /> Promote All Students
+            </button>
+          ) : (
+            <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+              <p className="text-sm font-bold text-red-700 mb-1">Are you sure?</p>
+              <p className="text-xs text-red-600 mb-3">All eligible students will be moved up one level. This cannot be undone automatically.</p>
+              <div className="flex gap-2">
+                <button onClick={promoteAll} disabled={promoting}
+                  className="flex items-center gap-1.5 bg-red-600 hover:bg-red-700 text-white text-sm font-bold px-4 py-2 rounded-xl transition disabled:opacity-60">
+                  {promoting && <Loader2 size={13} className="animate-spin" />}
+                  {promoting ? 'Promoting…' : 'Yes, Promote All'}
+                </button>
+                <button onClick={() => setConfirmPromote(false)} className="px-4 py-2 bg-gray-100 text-gray-600 text-sm rounded-xl hover:bg-gray-200 transition">Cancel</button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Students Tab (staff admin only) ───────────────────────────────────────────
+function StudentsTab() {
+  const { user: currentUser } = useAuth()
+  const [students, setStudents] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [search, setSearch] = useState('')
+  const [levelFilter, setLevelFilter] = useState('all')
+  const [actionLoading, setActionLoading] = useState(null)
+
+  const load = () => {
+    setLoading(true)
+    axios.get('/api/admin/users', { withCredentials: true })
+      .then(res => {
+        const all = res.data.users || []
+        setStudents(all.filter(u => u.accountType === 'student'))
+      })
+      .catch(() => toast.error('Failed to load students.'))
+      .finally(() => setLoading(false))
+  }
+  useEffect(load, [])
+
+  const changeLevel = async (student, newLevel) => {
+    setActionLoading(student._id + '_level')
+    try {
+      await axios.put(`/api/settings/students/${student._id}/level`, { level: newLevel }, { withCredentials: true })
+      setStudents(prev => prev.map(s => s._id === student._id ? { ...s, level: newLevel } : s))
+      toast.success(`${student.fullName} moved to ${newLevel}L.`)
+    } catch (err) { toast.error(err.response?.data?.message || 'Failed to update level.') }
+    finally { setActionLoading(null) }
+  }
+
+  const filtered = students.filter(s => {
+    const matchSearch = s.fullName?.toLowerCase().includes(search.toLowerCase()) ||
+      s.email?.toLowerCase().includes(search.toLowerCase()) ||
+      s.matricNumber?.toLowerCase().includes(search.toLowerCase())
+    const matchLevel = levelFilter === 'all' || s.level === levelFilter
+    return matchSearch && matchLevel
+  })
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="font-bold text-[#1a3c5e] text-lg">Student Level Management</h2>
+        <button onClick={load} className="p-2 border border-gray-200 rounded-xl hover:bg-gray-50 text-gray-500" title="Refresh"><RefreshCw size={15} /></button>
+      </div>
+      <p className="text-sm text-gray-500">Adjust individual student levels for suspended or repeating students.</p>
+
+      <div className="flex gap-2 flex-wrap">
+        <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-3 py-2.5 shadow-sm flex-1 min-w-48">
+          <Search size={15} className="text-gray-400 flex-shrink-0" />
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by name, email or matric…"
+            className="flex-1 text-sm focus:outline-none text-gray-700 bg-transparent" />
+        </div>
+        <select value={levelFilter} onChange={e => setLevelFilter(e.target.value)}
+          className="bg-white border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-600 focus:outline-none shadow-sm">
+          <option value="all">All Levels</option>
+          {['100', '200', '300', '400'].map(l => <option key={l} value={l}>{l}L</option>)}
+        </select>
+      </div>
+
+      {loading ? <CenteredSpinner /> : (
+        <>
+          <p className="text-xs text-gray-400">{filtered.length} student{filtered.length !== 1 ? 's' : ''} shown</p>
+          {filtered.length === 0 ? (
+            <div className="bg-white rounded-2xl border border-dashed border-gray-200 p-10 text-center">
+              <Users size={28} className="mx-auto mb-3 text-gray-200" />
+              <p className="text-gray-400 text-sm">No students found.</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {filtered.map(student => (
+                <div key={student._id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-3 flex items-center gap-3">
+                  {student.avatar
+                    ? <img src={student.avatar} alt={student.fullName} className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
+                    : <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#1a3c5e] to-[#2563a8] flex items-center justify-center text-white font-bold text-sm flex-shrink-0">{student.fullName?.charAt(0).toUpperCase()}</div>
+                  }
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-[#1a3c5e] text-sm truncate">{student.fullName}</p>
+                    <p className="text-xs text-gray-400 truncate">{student.email}{student.matricNumber ? ` · ${student.matricNumber}` : ''}</p>
+                  </div>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <select
+                      value={student.level}
+                      onChange={e => changeLevel(student, e.target.value)}
+                      disabled={actionLoading === student._id + '_level'}
+                      className="text-xs font-semibold text-[#1a3c5e] border border-gray-200 rounded-lg px-2 py-1.5 bg-white focus:outline-none focus:border-[#1a3c5e] disabled:opacity-50 cursor-pointer"
+                    >
+                      {['100', '200', '300', '400'].map(l => (
+                        <option key={l} value={l}>{l}L</option>
+                      ))}
+                    </select>
+                    {actionLoading === student._id + '_level' && <Loader2 size={14} className="animate-spin text-[#1a3c5e]" />}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  )
+}
+
 // ── Main Staff Panel ───────────────────────────────────────────────────────────
 export default function StaffPanel() {
+  const { user } = useAuth()
   const [activeTab, setActiveTab] = useState('resources')
+  const [mobileTabOpen, setMobileTabOpen] = useState(false)
+
+  const visibleTabs = TABS.filter(t => !t.adminOnly || user?.isStaffAdmin)
+  const currentTab = visibleTabs.find(t => t.id === activeTab) || visibleTabs[0]
 
   return (
     <div className="space-y-5">
       <div>
         <h1 className="text-2xl font-bold text-[#1a3c5e]">Staff Panel</h1>
-        <p className="text-gray-500 text-sm mt-1">Upload resources, set CBT questions and post assignments</p>
+        <p className="text-gray-500 text-sm mt-1">Upload resources, set CBT questions and post assignments{user?.isStaffAdmin ? ', manage sessions and students' : ''}</p>
       </div>
 
-      <div className="flex gap-1 bg-white border border-gray-100 rounded-2xl p-1 shadow-sm w-fit flex-wrap">
-        {TABS.map(tab => (
+      {/* Tab bar — desktop */}
+      <div className="hidden sm:flex gap-1 bg-white border border-gray-100 rounded-2xl p-1 shadow-sm w-fit flex-wrap">
+        {visibleTabs.map(tab => (
           <button key={tab.id} onClick={() => setActiveTab(tab.id)}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${activeTab === tab.id ? 'bg-[#1a3c5e] text-white shadow-sm' : 'text-gray-500 hover:text-[#1a3c5e] hover:bg-gray-50'}`}>
             <tab.icon size={15} /><span className="hidden sm:inline">{tab.label}</span>
@@ -473,9 +704,34 @@ export default function StaffPanel() {
         ))}
       </div>
 
-      {activeTab === 'resources' && <ResourcesTab />}
-      {activeTab === 'cbt' && <CBTTab />}
+      {/* Mobile tab dropdown */}
+      <div className="sm:hidden relative">
+        <button onClick={() => setMobileTabOpen(v => !v)}
+          className="w-full flex items-center justify-between bg-white border border-gray-200 rounded-2xl px-4 py-3 shadow-sm">
+          <div className="flex items-center gap-2">
+            {currentTab && <currentTab.icon size={16} className="text-[#1a3c5e]" />}
+            <span className="font-semibold text-[#1a3c5e] text-sm">{currentTab?.label}</span>
+          </div>
+          {mobileTabOpen ? <ChevronUp size={16} className="text-gray-400" /> : <ChevronDown size={16} className="text-gray-400" />}
+        </button>
+        {mobileTabOpen && (
+          <div className="absolute z-20 mt-1 w-full bg-white border border-gray-200 rounded-2xl shadow-xl overflow-hidden">
+            {visibleTabs.map(t => (
+              <button key={t.id} onClick={() => { setActiveTab(t.id); setMobileTabOpen(false) }}
+                className={`flex items-center gap-3 w-full px-4 py-3 text-sm transition hover:bg-gray-50 ${activeTab === t.id ? 'text-amber-600 font-semibold bg-amber-50' : 'text-gray-700'}`}>
+                <t.icon size={15} className={activeTab === t.id ? 'text-amber-500' : 'text-gray-400'} />
+                {t.label}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {activeTab === 'resources'   && <ResourcesTab />}
+      {activeTab === 'cbt'         && <CBTTab />}
       {activeTab === 'assignments' && <AssignmentsTab />}
+      {activeTab === 'session'     && user?.isStaffAdmin && <SessionTab />}
+      {activeTab === 'students'    && user?.isStaffAdmin && <StudentsTab />}
     </div>
   )
 }

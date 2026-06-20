@@ -24,7 +24,7 @@ export default function AppExplore() {
     <div className="relative -m-4 lg:-m-6 min-h-full bg-[#060d1a]">
 
       {/* Sticky tab bar */}
-      <div className="sticky top-0 z-30 bg-[#060d1a]/95 backdrop-blur-md border-b border-white/5">
+      <div className="sticky top-0 z-30 bg-[#060d1a] border-b border-white/10">
         <div className="flex overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
           {TABS.map(tab => (
             <button
