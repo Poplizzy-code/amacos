@@ -4,11 +4,9 @@ import axios from 'axios'
 import toast from 'react-hot-toast'
 import { useAuth } from '../context/AuthContext'
 import {
-  Award, Plus, Calendar, Clock, ChevronRight, Loader2, X,
-  Check, ChevronLeft, Vote, Users, FileText, Trash2,
+  Award, Plus, Calendar, ChevronRight, Loader2, X,
+  Check, ChevronLeft, Vote, FileText, Trash2,
 } from 'lucide-react'
-
-const SB = '#0a1929'
 
 const STATUS_META = {
   draft:             { label: 'Draft',          cls: 'text-gray-400 bg-gray-400/10 border-gray-400/20' },
@@ -22,31 +20,15 @@ const STATUS_META = {
 const STATUS_NEXT_LABEL = {
   draft:        'Open Form Picking',
   form_picking: 'Start Reviewing',
-  reviewing:    'Open Voting',
+  // reviewing → 'Open Voting' is handled inside the detail page (needs voting info first)
   voting:       'Close Voting',
   closed:       'Publish Results',
 }
 
-const REQUIREMENTS = [
-  { id: 'student_id',        label: 'Student ID Card' },
-  { id: 'school_gmail',      label: 'School Gmail' },
-  { id: 'matric_number',     label: 'Matric Number on Record' },
-  { id: 'active_member',     label: 'Active AMACOS Member' },
-  { id: 'physical_presence', label: 'Physical Presence at Polling Unit' },
-]
-
-const VISIBILITY_OPTS = [
-  { id: 'live',        label: 'Live Updates',  desc: 'Bar chart visible to everyone, updates in real-time as votes come in' },
-  { id: 'after_close', label: 'After Close',   desc: 'Everyone sees results the moment voting ends' },
-  { id: 'admin_only',  label: 'Admin Only',    desc: 'Only you (admin) see results — announce however you want' },
-]
-
-const emptyPos = { title: '', description: '', formFee: 0 }
+const emptyPos  = { title: '', description: '', formFee: 0 }
 const emptyForm = {
   title: '', description: '',
-  resultsVisibility: 'after_close', votingRequirements: [],
   formPickingStart: '', formPickingDeadline: '',
-  votingStart: '', votingDeadline: '',
   bankName: '', accountNumber: '', accountName: '', paymentNote: '',
 }
 
@@ -55,9 +37,9 @@ const fmtDate = (d) => d
   : '—'
 
 export default function Elections() {
-  const { user }   = useAuth()
-  const navigate   = useNavigate()
-  const isAdmin    = user?.isStaffAdmin || user?.isStudentAdmin || user?.accountType === 'staff'
+  const { user }  = useAuth()
+  const navigate  = useNavigate()
+  const isAdmin   = user?.isStaffAdmin || user?.isStudentAdmin || user?.accountType === 'staff'
 
   const [elections, setElections] = useState([])
   const [loading, setLoading]     = useState(true)
@@ -75,15 +57,10 @@ export default function Elections() {
       .finally(() => setLoading(false))
   }, [])
 
-  const setF        = (k, v) => setForm(f => ({ ...f, [k]: v }))
-  const toggleReq   = (id) => setF('votingRequirements',
-    form.votingRequirements.includes(id)
-      ? form.votingRequirements.filter(r => r !== id)
-      : [...form.votingRequirements, id]
-  )
-  const setPos = (i, k, v) => setPositions(p => p.map((x, j) => j === i ? { ...x, [k]: v } : x))
-  const hasFees    = positions.some(p => Number(p.formFee) > 0)
-  const totalSteps = hasFees ? 4 : 3
+  const setF    = (k, v) => setForm(f => ({ ...f, [k]: v }))
+  const setPos  = (i, k, v) => setPositions(p => p.map((x, j) => j === i ? { ...x, [k]: v } : x))
+  const hasFees = positions.some(p => Number(p.formFee) > 0)
+  const totalSteps = hasFees ? 3 : 2
 
   const cancelCreate = () => { setCreating(false); setStep(1); setForm(emptyForm); setPositions([{ ...emptyPos }]) }
 
@@ -99,12 +76,18 @@ export default function Elections() {
       })
       setElections(prev => [data.election, ...prev])
       cancelCreate()
-      toast.success(asDraft ? 'Saved as draft.' : 'Election published!')
+      toast.success(asDraft ? 'Saved as draft.' : 'Election published — form picking is now open!')
     } catch (err) { toast.error(err.response?.data?.message || 'Failed.') }
     finally { setSaving(false) }
   }
 
-  const advance = async (el) => {
+  const advance = async (el, e) => {
+    e.stopPropagation()
+    // 'reviewing → voting' requires filling voting info first — go to detail page
+    if (el.status === 'reviewing') {
+      navigate(`/app/elections/${el._id}`)
+      return
+    }
     if (!window.confirm(`Advance "${el.title}" to: ${STATUS_NEXT_LABEL[el.status]}?`)) return
     setAdvancing(el._id)
     try {
@@ -142,19 +125,19 @@ export default function Elections() {
           {Array.from({ length: totalSteps }, (_, i) => i + 1).map(s => (
             <div key={s} className="flex items-center gap-1 flex-1">
               <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-all flex-shrink-0 ${
-                s < step  ? 'bg-amber-400 border-amber-400 text-[#060d1a]' :
+                s < step   ? 'bg-amber-400 border-amber-400 text-[#060d1a]' :
                 s === step ? 'border-amber-400 text-amber-400' :
-                             'border-gray-700 text-gray-600'
+                              'border-gray-700 text-gray-600'
               }`}>{s < step ? <Check size={11} /> : s}</div>
               {s < totalSteps && <div className={`flex-1 h-0.5 ${s < step ? 'bg-amber-400' : 'bg-gray-800'}`} />}
             </div>
           ))}
         </div>
 
-        {/* Step 1 — Basic Info */}
+        {/* Step 1 — Basic Info + Form Picking Dates */}
         {step === 1 && (
           <div className="space-y-5">
-            <h2 className="text-white font-bold">Basic Information</h2>
+            <h2 className="text-white font-bold">Election Details</h2>
             <div>
               <label className="text-gray-400 text-xs font-semibold mb-1.5 block">Election Title *</label>
               <input value={form.title} onChange={e => setF('title', e.target.value)}
@@ -167,71 +150,28 @@ export default function Elections() {
                 rows={2} placeholder="Brief description..."
                 className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-white placeholder-gray-600 text-sm focus:outline-none focus:border-amber-400/40 resize-none" />
             </div>
-            <div>
-              <label className="text-gray-400 text-xs font-semibold mb-2 block">Voting Requirements <span className="text-gray-600 font-normal">(tick all that apply)</span></label>
-              <div className="space-y-2.5">
-                {REQUIREMENTS.map(r => (
-                  <div key={r.id} onClick={() => toggleReq(r.id)} className="flex items-center gap-3 cursor-pointer group">
-                    <div className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 transition ${
-                      form.votingRequirements.includes(r.id) ? 'bg-amber-400 border-amber-400' : 'border-gray-600 group-hover:border-gray-400'
-                    }`}>
-                      {form.votingRequirements.includes(r.id) && <Check size={10} className="text-[#060d1a]" />}
-                    </div>
-                    <span className="text-gray-300 text-sm">{r.label}</span>
+            <div className="pt-1">
+              <p className="text-gray-400 text-xs font-semibold mb-3">Aspiration Form Window</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {[
+                  { key: 'formPickingStart',    label: 'Forms Open' },
+                  { key: 'formPickingDeadline', label: 'Forms Close' },
+                ].map(({ key, label }) => (
+                  <div key={key}>
+                    <label className="text-gray-500 text-xs mb-1.5 block">{label}</label>
+                    <input type="datetime-local" value={form[key]} onChange={e => setF(key, e.target.value)}
+                      style={{ fontSize: 16, colorScheme: 'dark' }}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-amber-400/40" />
                   </div>
                 ))}
               </div>
-            </div>
-            <div>
-              <label className="text-gray-400 text-xs font-semibold mb-2 block">Results Visibility</label>
-              <div className="space-y-2">
-                {VISIBILITY_OPTS.map(v => (
-                  <div key={v.id} onClick={() => setF('resultsVisibility', v.id)}
-                    className="flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition"
-                    style={{
-                      borderColor: form.resultsVisibility === v.id ? 'rgba(251,191,36,0.4)' : 'rgba(255,255,255,0.07)',
-                      background: form.resultsVisibility === v.id ? 'rgba(251,191,36,0.05)' : 'rgba(255,255,255,0.02)',
-                    }}>
-                    <div className={`w-4 h-4 mt-0.5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition ${
-                      form.resultsVisibility === v.id ? 'border-amber-400' : 'border-gray-600'
-                    }`}>
-                      {form.resultsVisibility === v.id && <div className="w-2 h-2 rounded-full bg-amber-400" />}
-                    </div>
-                    <div>
-                      <p className="text-white text-sm font-semibold">{v.label}</p>
-                      <p className="text-gray-500 text-xs mt-0.5">{v.desc}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <p className="text-gray-600 text-xs mt-2">Voting dates and requirements will be set when you are ready to open voting.</p>
             </div>
           </div>
         )}
 
-        {/* Step 2 — Timeline */}
+        {/* Step 2 — Positions */}
         {step === 2 && (
-          <div className="space-y-5">
-            <h2 className="text-white font-bold">Election Timeline</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {[
-                { key: 'formPickingStart',    label: 'Form Picking Opens' },
-                { key: 'formPickingDeadline', label: 'Form Picking Closes' },
-                { key: 'votingStart',         label: 'Voting Opens' },
-                { key: 'votingDeadline',      label: 'Voting Deadline' },
-              ].map(({ key, label }) => (
-                <div key={key}>
-                  <label className="text-gray-400 text-xs font-semibold mb-1.5 block">{label}</label>
-                  <input type="datetime-local" value={form[key]} onChange={e => setF(key, e.target.value)}
-                    style={{ fontSize: 16, colorScheme: 'dark' }}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-amber-400/40" />
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Step 3 — Positions */}
-        {step === 3 && (
           <div className="space-y-4">
             <h2 className="text-white font-bold">Positions</h2>
             <p className="text-gray-500 text-sm">Add all positions to be contested. Set form fee to 0 for free.</p>
@@ -253,8 +193,7 @@ export default function Elections() {
                     placeholder="Brief role description (optional)" style={{ fontSize: 16 }}
                     className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white placeholder-gray-600 text-sm focus:outline-none focus:border-amber-400/40" />
                   <div className="flex items-center gap-2">
-                    <span className="text-gray-500 text-xs">Form Fee:</span>
-                    <span className="text-gray-500 text-xs">₦</span>
+                    <span className="text-gray-500 text-xs">Form Fee: ₦</span>
                     <input type="number" min={0} value={p.formFee} onChange={e => setPos(i, 'formFee', e.target.value)}
                       placeholder="0" style={{ fontSize: 16 }}
                       className="w-28 bg-white/5 border border-white/10 rounded-xl px-3 py-1.5 text-white text-sm focus:outline-none focus:border-amber-400/40" />
@@ -270,8 +209,8 @@ export default function Elections() {
           </div>
         )}
 
-        {/* Step 4 — Payment Info */}
-        {step === 4 && hasFees && (
+        {/* Step 3 — Payment Info (only if any position has a fee) */}
+        {step === 3 && hasFees && (
           <div className="space-y-4">
             <h2 className="text-white font-bold">Payment Information</h2>
             <p className="text-gray-500 text-sm">Some positions require a form fee. Provide payment details for aspirants.</p>
@@ -352,7 +291,8 @@ export default function Elections() {
             </div>
           )
           : elections.map(el => {
-              const meta = STATUS_META[el.status] || STATUS_META.draft
+              const meta    = STATUS_META[el.status] || STATUS_META.draft
+              const nextLbl = el.status === 'reviewing' ? 'Open Voting →' : STATUS_NEXT_LABEL[el.status]
               return (
                 <div key={el._id}
                   className="rounded-2xl border border-gray-200 bg-white p-4 hover:border-[#1a3c5e]/30 hover:shadow-sm transition cursor-pointer"
@@ -362,25 +302,27 @@ export default function Elections() {
                       <div className="flex items-center gap-2 mb-1.5 flex-wrap">
                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${meta.cls}`}>{meta.label}</span>
                         <span className="text-gray-400 text-[10px]">{el.positions?.length || 0} positions</span>
-                        <span className="text-gray-400 text-[10px]">
-                          {el.resultsVisibility === 'live' ? '📊 Live results' :
-                           el.resultsVisibility === 'admin_only' ? '🔒 Admin results' : '📊 Results after close'}
-                        </span>
                       </div>
                       <h3 className="text-[#1a3c5e] font-bold">{el.title}</h3>
                       {el.description && <p className="text-gray-500 text-sm mt-0.5 line-clamp-1">{el.description}</p>}
                       <div className="flex items-center gap-4 mt-2 flex-wrap">
-                        <span className="text-gray-400 text-xs flex items-center gap-1"><FileText size={10} /> Forms close: {fmtDate(el.formPickingDeadline)}</span>
-                        <span className="text-gray-400 text-xs flex items-center gap-1"><Vote size={10} /> Voting ends: {fmtDate(el.votingDeadline)}</span>
+                        <span className="text-gray-400 text-xs flex items-center gap-1">
+                          <FileText size={10} /> Forms close: {fmtDate(el.formPickingDeadline)}
+                        </span>
+                        {el.votingDeadline && (
+                          <span className="text-gray-400 text-xs flex items-center gap-1">
+                            <Vote size={10} /> Voting ends: {fmtDate(el.votingDeadline)}
+                          </span>
+                        )}
                       </div>
                     </div>
                     <div className="flex flex-col items-end gap-2 flex-shrink-0">
                       <ChevronRight size={16} className="text-gray-400" />
-                      {isAdmin && STATUS_NEXT_LABEL[el.status] && (
-                        <button onClick={e => { e.stopPropagation(); advance(el) }} disabled={advancing === el._id}
+                      {isAdmin && nextLbl && (
+                        <button onClick={e => advance(el, e)} disabled={advancing === el._id}
                           className="text-[10px] px-2.5 py-1 bg-[#1a3c5e]/8 text-[#1a3c5e] rounded-lg border border-[#1a3c5e]/15 hover:bg-[#1a3c5e]/15 transition whitespace-nowrap flex items-center gap-1">
                           {advancing === el._id ? <Loader2 size={9} className="animate-spin" /> : null}
-                          {STATUS_NEXT_LABEL[el.status]}
+                          {nextLbl}
                         </button>
                       )}
                       {isAdmin && el.status === 'draft' && (

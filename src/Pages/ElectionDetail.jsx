@@ -31,6 +31,14 @@ const REQUIREMENT_LABELS = {
   physical_presence: 'Physical Presence at Polling Unit',
 }
 
+const REQUIREMENTS = Object.entries(REQUIREMENT_LABELS).map(([id, label]) => ({ id, label }))
+
+const VISIBILITY_OPTS = [
+  { id: 'live',        label: 'Live Updates',  desc: 'Bar chart visible to everyone, updates in real-time as votes come in' },
+  { id: 'after_close', label: 'After Close',   desc: 'Everyone sees results the moment voting ends' },
+  { id: 'admin_only',  label: 'Admin Only',    desc: 'Only you (admin) see results — announce however you want' },
+]
+
 const fmtDate = (d) => d
   ? new Date(d).toLocaleString('en-NG', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
   : '—'
@@ -138,6 +146,19 @@ export default function ElectionDetail() {
   const [rejectNote, setRejectNote] = useState({})
   const [reviewing, setReviewing]   = useState(null)
 
+  // Voting setup (filled when admin opens voting from 'reviewing' stage)
+  const [votingSetup, setVotingSetup] = useState({
+    votingStart: '', votingDeadline: '',
+    votingRequirements: [], resultsVisibility: 'after_close',
+  })
+  const [openingVoting, setOpeningVoting] = useState(false)
+  const setVS = (k, v) => setVotingSetup(s => ({ ...s, [k]: v }))
+  const toggleVReq = (id) => setVS('votingRequirements',
+    votingSetup.votingRequirements.includes(id)
+      ? votingSetup.votingRequirements.filter(r => r !== id)
+      : [...votingSetup.votingRequirements, id]
+  )
+
   const loadElection = useCallback(async () => {
     try {
       const { data } = await axios.get(`/api/elections/${id}`)
@@ -225,6 +246,24 @@ export default function ElectionDetail() {
       if (['closed', 'results_published'].includes(data.election.status)) loadResults()
     } catch (err) { toast.error(err.response?.data?.message || 'Failed.') }
     finally { setAdvancing(false) }
+  }
+
+  const openVoting = async () => {
+    if (!votingSetup.votingDeadline) return toast.error('Set a voting deadline.')
+    setOpeningVoting(true)
+    try {
+      // Save voting info to election first, then advance stage
+      await axios.put(`/api/elections/${id}`, {
+        votingStart: votingSetup.votingStart || null,
+        votingDeadline: votingSetup.votingDeadline,
+        votingRequirements: votingSetup.votingRequirements,
+        resultsVisibility: votingSetup.resultsVisibility,
+      })
+      const { data } = await axios.put(`/api/elections/${id}/advance`)
+      setElection(data.election)
+      toast.success('Voting is now open!')
+    } catch (err) { toast.error(err.response?.data?.message || 'Failed to open voting.') }
+    finally { setOpeningVoting(false) }
   }
 
   const submitApplication = async () => {
@@ -356,7 +395,73 @@ export default function ElectionDetail() {
               </div>
             </div>
           )}
-          {STATUS_NL[election.status] && (
+          {/* Open Voting: show voting setup form */}
+          {election.status === 'reviewing' && (
+            <div className="rounded-2xl border border-green-200 bg-green-50 p-4 space-y-4">
+              <h3 className="text-green-800 font-bold text-sm flex items-center gap-2">
+                <Vote size={14} /> Set Up Voting Before Opening
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {[
+                  { key: 'votingStart',    label: 'Voting Opens (optional)' },
+                  { key: 'votingDeadline', label: 'Voting Deadline *' },
+                ].map(({ key, label }) => (
+                  <div key={key}>
+                    <label className="text-gray-500 text-xs font-semibold mb-1.5 block">{label}</label>
+                    <input type="datetime-local" value={votingSetup[key]}
+                      onChange={e => setVS(key, e.target.value)}
+                      style={{ fontSize: 16, colorScheme: 'light' }}
+                      className="w-full bg-white border border-gray-200 rounded-xl px-3 py-2.5 text-gray-700 focus:outline-none focus:border-green-400/60" />
+                  </div>
+                ))}
+              </div>
+              <div>
+                <p className="text-gray-500 text-xs font-semibold mb-2">Voting Requirements <span className="text-gray-400 font-normal">(tick all that apply)</span></p>
+                <div className="space-y-2">
+                  {REQUIREMENTS.map(r => (
+                    <div key={r.id} onClick={() => toggleVReq(r.id)} className="flex items-center gap-2.5 cursor-pointer group">
+                      <div className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 transition ${
+                        votingSetup.votingRequirements.includes(r.id) ? 'bg-green-500 border-green-500' : 'border-gray-300 group-hover:border-gray-400'
+                      }`}>
+                        {votingSetup.votingRequirements.includes(r.id) && <Check size={10} className="text-white" />}
+                      </div>
+                      <span className="text-gray-600 text-sm">{r.label}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <p className="text-gray-500 text-xs font-semibold mb-2">Results Visibility</p>
+                <div className="space-y-2">
+                  {VISIBILITY_OPTS.map(v => (
+                    <div key={v.id} onClick={() => setVS('resultsVisibility', v.id)}
+                      className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition ${
+                        votingSetup.resultsVisibility === v.id
+                          ? 'border-green-300 bg-green-100/60'
+                          : 'border-gray-200 bg-white hover:bg-gray-50'
+                      }`}>
+                      <div className={`w-4 h-4 mt-0.5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition ${
+                        votingSetup.resultsVisibility === v.id ? 'border-green-500' : 'border-gray-300'
+                      }`}>
+                        {votingSetup.resultsVisibility === v.id && <div className="w-2 h-2 rounded-full bg-green-500" />}
+                      </div>
+                      <div>
+                        <p className="text-gray-800 text-sm font-semibold">{v.label}</p>
+                        <p className="text-gray-500 text-xs mt-0.5">{v.desc}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <button onClick={openVoting} disabled={openingVoting || !votingSetup.votingDeadline}
+                className="w-full flex items-center justify-center gap-2 py-3 bg-green-500 hover:bg-green-400 text-white font-bold text-sm rounded-xl transition disabled:opacity-60">
+                {openingVoting ? <Loader2 size={14} className="animate-spin" /> : <Vote size={14} />}
+                Open Voting Now
+              </button>
+            </div>
+          )}
+          {/* All other stage advances */}
+          {STATUS_NL[election.status] && election.status !== 'reviewing' && (
             <button onClick={advance} disabled={advancing}
               className="w-full flex items-center justify-center gap-2 py-3 bg-[#1a3c5e] hover:bg-[#1a3c5e]/80 text-white font-bold text-sm rounded-xl transition disabled:opacity-60">
               {advancing ? <Loader2 size={14} className="animate-spin" /> : null}
