@@ -8,6 +8,7 @@ import {
   MessageSquare, Users, Zap, Send, Plus, Search, ArrowLeft,
   Loader2, X, Heart, Trash2, Image as ImageIcon,
   LogOut, ChevronDown, ChevronUp, UserPlus, Edit2, Check, Camera,
+  Globe, Lock, Link2, Copy,
 } from 'lucide-react'
 
 // ── Shared ────────────────────────────────────────────────────────────────────
@@ -249,6 +250,10 @@ function GroupsPane({ user }) {
   const [avatarPreview, setAvatarPreview] = useState('')
   const avatarRef = useRef()
 
+  // Privacy / invite
+  const [togglingPublic, setTogglingPublic] = useState(false)
+  const [genningCode, setGenningCode]       = useState(false)
+
   // Add members
   const [showAdd, setShowAdd]   = useState(false)
   const [allUsers, setAllUsers] = useState([])
@@ -394,6 +399,41 @@ function GroupsPane({ user }) {
     } catch { toast.error('Failed.') }
   }
 
+  const togglePublic = async () => {
+    if (!sel) return
+    setTogglingPublic(true)
+    try {
+      const { data } = await axios.put(`/api/groups/${sel._id}/settings`, { isPublic: !sel.isPublic })
+      setSel(data.group); setGroups(p => p.map(g => g._id === data.group._id ? data.group : g))
+    } catch { toast.error('Failed.') }
+    finally { setTogglingPublic(false) }
+  }
+
+  const generateInviteCode = async () => {
+    if (!sel) return
+    setGenningCode(true)
+    try {
+      const { data } = await axios.put(`/api/groups/${sel._id}/settings`, { generateInviteCode: true })
+      setSel(data.group); setGroups(p => p.map(g => g._id === data.group._id ? data.group : g))
+      toast.success('Invite link generated!')
+    } catch { toast.error('Failed.') }
+    finally { setGenningCode(false) }
+  }
+
+  const clearInviteCode = async () => {
+    if (!sel) return
+    try {
+      const { data } = await axios.put(`/api/groups/${sel._id}/settings`, { clearInviteCode: true })
+      setSel(data.group); setGroups(p => p.map(g => g._id === data.group._id ? data.group : g))
+      toast.success('Invite link revoked.')
+    } catch { toast.error('Failed.') }
+  }
+
+  const copyInviteLink = () => {
+    const url = `${window.location.origin}/app/lets-talk?join=${sel.inviteCode}`
+    navigator.clipboard.writeText(url).then(() => toast.success('Link copied!')).catch(() => toast.error('Copy failed.'))
+  }
+
   const isAdmin   = sel && (sel.admins || []).some(a => (a._id || a) === user._id)
   const isCreator = sel && ((sel.createdBy?._id || sel.createdBy) === user._id)
   const filtered  = groups.filter(g => g.name?.toLowerCase().includes(search.toLowerCase()))
@@ -530,6 +570,55 @@ function GroupsPane({ user }) {
                   })}
                 </div>
               </div>
+
+              {/* Privacy & Invite */}
+              {isAdmin && (
+                <div className="px-4 py-4 border-t border-white/5">
+                  <p className="text-gray-500 text-xs font-semibold uppercase tracking-wider mb-3">Privacy & Invite</p>
+
+                  {/* Public toggle */}
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      {sel.isPublic ? <Globe size={13} className="text-green-400" /> : <Lock size={13} className="text-gray-500" />}
+                      <div>
+                        <p className="text-white text-xs font-semibold">{sel.isPublic ? 'Public' : 'Private'}</p>
+                        <p className="text-gray-600 text-[10px]">{sel.isPublic ? 'Discoverable in group browser' : 'Invite-only'}</p>
+                      </div>
+                    </div>
+                    <button onClick={togglePublic} disabled={togglingPublic}
+                      className={`w-10 h-5 rounded-full relative transition-colors disabled:opacity-50 ${sel.isPublic ? 'bg-green-500' : 'bg-white/10'}`}>
+                      <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-all ${sel.isPublic ? 'left-5' : 'left-0.5'}`} />
+                    </button>
+                  </div>
+
+                  {/* Invite link */}
+                  {sel.inviteCode ? (
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 p-2 bg-white/5 rounded-xl border border-white/10">
+                        <Link2 size={11} className="text-amber-400 flex-shrink-0" />
+                        <span className="text-gray-400 text-[10px] flex-1 truncate">
+                          {`${window.location.origin}/app/lets-talk?join=${sel.inviteCode}`}
+                        </span>
+                      </div>
+                      <div className="flex gap-2">
+                        <button onClick={copyInviteLink}
+                          className="flex-1 flex items-center justify-center gap-1 py-1.5 bg-amber-400/10 text-amber-400 text-xs font-semibold rounded-xl hover:bg-amber-400/20 transition">
+                          <Copy size={11} /> Copy Link
+                        </button>
+                        <button onClick={clearInviteCode}
+                          className="px-3 py-1.5 bg-white/5 text-gray-500 text-xs rounded-xl hover:bg-white/10 transition">
+                          Revoke
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button onClick={generateInviteCode} disabled={genningCode}
+                      className="w-full flex items-center justify-center gap-1.5 py-2 bg-white/5 text-gray-300 text-xs font-semibold rounded-xl hover:bg-white/10 transition disabled:opacity-50">
+                      {genningCode ? <Loader2 size={11} className="animate-spin" /> : <Link2 size={11} />} Generate Invite Link
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Bottom actions */}
@@ -911,8 +1000,24 @@ const TABS = [
 export default function LetsTalk() {
   const { user } = useAuth()
   const location = useLocation()
-  const initTab  = new URLSearchParams(location.search).get('tab') === 'groups' ? 'groups' : 'chats'
+  const params   = new URLSearchParams(location.search)
+  const joinCode = params.get('join')
+  const initTab  = joinCode || params.get('tab') === 'groups' ? 'groups' : 'chats'
   const [active, setActive] = useState(initTab)
+  const [joinedGroup, setJoinedGroup] = useState(null)
+
+  useEffect(() => {
+    if (!joinCode || !user) return
+    axios.post(`/api/groups/join/${joinCode}`)
+      .then(({ data }) => {
+        setJoinedGroup(data.group)
+        if (data.alreadyMember) toast('You are already in this group.')
+        else toast.success(`Joined "${data.group.name}"!`)
+        window.history.replaceState({}, '', '/app/lets-talk?tab=groups')
+      })
+      .catch(err => toast.error(err.response?.data?.message || 'Invalid invite link.'))
+  }, [joinCode, user])
+
   if (!user) return null
 
   return (

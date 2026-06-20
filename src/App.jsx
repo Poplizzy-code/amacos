@@ -41,6 +41,8 @@ import MediaCreate from './Pages/MediaCreate'
 import MediaEditorQueue from './Pages/MediaEditorQueue'
 import Elections from './Pages/Elections'
 import ElectionDetail from './Pages/ElectionDetail'
+import Communities from './Pages/Communities'
+import CommunityDetail from './Pages/CommunityDetail'
 
 const Spinner = () => (
   <div className="flex items-center justify-center h-screen bg-[#f8fafc]">
@@ -153,6 +155,8 @@ const AppRoutes = () => {
         <Route path="media/queue" element={<MediaEditorQueue isApp />} />
         <Route path="elections" element={<Elections />} />
         <Route path="elections/:id" element={<ElectionDetail />} />
+        <Route path="communities" element={<Communities />} />
+        <Route path="communities/:id" element={<CommunityDetail />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" />} />

@@ -5,9 +5,9 @@ import { useSocket } from '../context/SocketContext'
 import toast from 'react-hot-toast'
 import {
   LayoutDashboard, BookOpen, FileQuestion, MessageSquare,
-  Monitor, Code2, Compass, FlaskConical, Users, Bell, Shield,
+  Monitor, Compass, FlaskConical, Users, Bell, Shield,
   LogOut, Menu, X, ClipboardList,
-  GraduationCap, ChevronRight, Settings, ArrowLeft, ShieldCheck, Vote,
+  GraduationCap, ChevronRight, Settings, ArrowLeft, ShieldCheck, Vote, Users2,
 } from 'lucide-react'
 
 const navItems = [
@@ -21,8 +21,8 @@ const navItems = [
   { label: 'Research & Opps', path: '/app/research',       icon: FlaskConical },
   { label: 'Alumni Network',  path: '/app/alumni',         icon: Users },
   { label: 'Elections',        path: '/app/elections',      icon: Vote },
+  { label: 'Communities',     path: '/app/communities',    icon: Users2 },
   { label: 'Notifications',   path: '/app/notifications',  icon: Bell },
-  { label: 'Tech Community',  path: '/app/tech',           icon: Code2,         techOnly: true },
   { label: 'Staff Panel',     path: '/app/staff-panel',    icon: GraduationCap, staffOnly: true },
   { label: 'Student Panel',   path: '/app/student-panel',  icon: ShieldCheck,   studentAdminOnly: true },
   { label: 'Admin',           path: '/app/admin',          icon: Shield,        staffAdminOnly: true },
