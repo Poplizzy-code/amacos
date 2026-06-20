@@ -6,7 +6,7 @@ import {
   Star, Megaphone, FlaskConical, CalendarDays, Users,
   Trash2, Upload, Search, Image as ImageIcon, X, Loader2,
   Plus, RefreshCw, MapPin, ExternalLink, ShieldCheck, ShieldOff,
-  ChevronDown, ChevronUp, BookOpen, FileText, Eye, CalendarClock,
+  ChevronDown, ChevronUp, BookOpen, FileText, Eye, CalendarClock, Tv2,
 } from 'lucide-react'
 
 const TABS = [
@@ -18,6 +18,7 @@ const TABS = [
   { id: 'pastquestions', label: 'Past Questions',   icon: FileText },
   { id: 'session',       label: 'Session',          icon: CalendarClock },
   { id: 'students',      label: 'Student Admins',   icon: Users },
+  { id: 'media',         label: 'Media Roles',      icon: Tv2 },
 ]
 
 function CenteredSpinner() {
@@ -839,6 +840,95 @@ function StudentRow({ student, isSelf, loading, onToggle }) {
   )
 }
 
+// ── Media Roles Tab ───────────────────────────────────────────────────────────
+const MEDIA_ROLES = [
+  { value: '',           label: 'No Role',      color: 'text-gray-400', bg: 'bg-gray-100' },
+  { value: 'publisher',  label: 'Publisher',    color: 'text-blue-600', bg: 'bg-blue-50' },
+  { value: 'editor',     label: 'Editor',       color: 'text-purple-600', bg: 'bg-purple-50' },
+]
+
+function MediaRolesTab({ canAssignChief = false }) {
+  const [users, setUsers]       = useState([])
+  const [loading, setLoading]   = useState(true)
+  const [search, setSearch]     = useState('')
+  const [roleFilter, setRoleFilter] = useState('')
+  const [actionLoading, setActionLoading] = useState(null)
+
+  const load = () => {
+    setLoading(true)
+    axios.get('/api/media/roles/all', { withCredentials: true, params: { search, limit: 50 } })
+      .then(res => setUsers(res.data.users || []))
+      .catch(() => toast.error('Failed to load users.'))
+      .finally(() => setLoading(false))
+  }
+  useEffect(load, [search])
+
+  const setRole = async (userId, role) => {
+    setActionLoading(userId)
+    try {
+      await axios.put(`/api/media/roles/${userId}`, { role }, { withCredentials: true })
+      setUsers(prev => prev.map(u => u._id === userId ? { ...u, mediaRole: role } : u))
+      toast.success(`Role ${role ? `set to ${role}` : 'removed'}.`)
+    } catch (err) { toast.error(err.response?.data?.message || 'Failed.') }
+    finally { setActionLoading(null) }
+  }
+
+  const roles = canAssignChief
+    ? [...MEDIA_ROLES, { value: 'chief-editor', label: 'Chief Editor', color: 'text-amber-600', bg: 'bg-amber-50' }]
+    : MEDIA_ROLES
+
+  const filtered = roleFilter ? users.filter(u => u.mediaRole === roleFilter) : users
+
+  return (
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm">
+      <div className="px-4 sm:px-5 py-4 border-b border-gray-100">
+        <h2 className="text-base font-bold text-[#1a3c5e] mb-3">Media Roles</h2>
+        <div className="flex gap-2 flex-wrap">
+          <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 flex-1 min-w-40">
+            <Search size={14} className="text-gray-400 flex-shrink-0" />
+            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search students…"
+              className="flex-1 bg-transparent text-sm text-[#1a3c5e] placeholder-gray-400 focus:outline-none" />
+          </div>
+          <select value={roleFilter} onChange={e => setRoleFilter(e.target.value)}
+            className="bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm text-[#1a3c5e] focus:outline-none">
+            <option value="">All roles</option>
+            {roles.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+          </select>
+        </div>
+      </div>
+      {loading
+        ? <CenteredSpinner />
+        : filtered.length === 0
+          ? <div className="text-center py-10 text-gray-400 text-sm">No users found.</div>
+          : <div className="divide-y divide-gray-50">
+              {filtered.map(u => (
+                <div key={u._id} className="flex items-center gap-3 px-4 sm:px-5 py-3">
+                  {u.avatar
+                    ? <img src={u.avatar} alt={u.fullName} className="w-9 h-9 rounded-full object-cover flex-shrink-0" />
+                    : <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#1a3c5e] to-[#2563a8] flex items-center justify-center text-white text-xs font-bold flex-shrink-0">{u.fullName?.charAt(0)}</div>
+                  }
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-[#1a3c5e] truncate">{u.fullName}</p>
+                    <p className="text-xs text-gray-400 truncate">{u.email}</p>
+                  </div>
+                  <select value={u.mediaRole || ''} onChange={e => setRole(u._id, e.target.value)}
+                    disabled={actionLoading === u._id}
+                    className={`text-xs font-semibold border rounded-xl px-2.5 py-1.5 focus:outline-none transition flex-shrink-0 disabled:opacity-50 ${
+                      u.mediaRole === 'chief-editor' ? 'bg-amber-50 border-amber-200 text-amber-600' :
+                      u.mediaRole === 'editor'       ? 'bg-purple-50 border-purple-200 text-purple-600' :
+                      u.mediaRole === 'publisher'    ? 'bg-blue-50 border-blue-200 text-blue-600' :
+                      'bg-gray-50 border-gray-200 text-gray-500'
+                    }`}>
+                    {roles.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+                  </select>
+                </div>
+              ))}
+            </div>
+      }
+    </div>
+  )
+}
+
 // ── Main ──────────────────────────────────────────────────────────────────────
 export default function StudentPanel() {
   const { user } = useAuth()
@@ -912,6 +1002,7 @@ export default function StudentPanel() {
         {activeTab === 'pastquestions' && <FilesTab isPastQuestions={true} />}
         {activeTab === 'session'       && <SessionTab />}
         {activeTab === 'students'      && <StudentsTab />}
+        {activeTab === 'media'         && <MediaRolesTab canAssignChief={false} />}
       </div>
     </div>
   )

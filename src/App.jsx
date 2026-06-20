@@ -33,6 +33,11 @@ import Settings from './Pages/Settings'
 import Filters from './Pages/Filters'
 import Groups from './Pages/Groups'
 import StudentPanel from './Pages/StudentPanel'
+import MediaHub from './Pages/MediaHub'
+import MediaChannel from './Pages/MediaChannel'
+import MediaContentPage from './Pages/MediaContentPage'
+import MediaCreate from './Pages/MediaCreate'
+import MediaEditorQueue from './Pages/MediaEditorQueue'
 
 const Spinner = () => (
   <div className="flex items-center justify-center h-screen bg-[#f8fafc]">
@@ -105,6 +110,11 @@ const AppRoutes = () => {
         <Route path="/about" element={<About />} />
       </Route>
 
+      {/* Public media hub — no login needed */}
+      <Route path="/media" element={<MediaHub />} />
+      <Route path="/media/channel/:slug" element={<MediaChannel />} />
+      <Route path="/media/content/:id" element={<MediaContentPage />} />
+
       {/* Protected app pages */}
       <Route path="/app" element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
         <Route index element={<Navigate to="/app/dashboard" />} />
@@ -132,6 +142,11 @@ const AppRoutes = () => {
         <Route path="notifications" element={<Notifications />} />
         <Route path="admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
         <Route path="student-panel" element={<StudentAdminRoute><StudentPanel /></StudentAdminRoute>} />
+        <Route path="media" element={<MediaHub isApp />} />
+        <Route path="media/channel/:slug" element={<MediaChannel isApp />} />
+        <Route path="media/content/:id" element={<MediaContentPage isApp />} />
+        <Route path="media/create" element={<MediaCreate isApp />} />
+        <Route path="media/queue" element={<MediaEditorQueue isApp />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" />} />

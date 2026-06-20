@@ -6,7 +6,7 @@ import {
   BookOpen, Monitor, ClipboardList, Upload, FileText,
   Trash2, Plus, X, Loader2, Eye, Image as ImageIcon,
   Film, File as FileIcon, CalendarClock, Users, Search,
-  RefreshCw, ChevronDown, ChevronUp,
+  RefreshCw, ChevronDown, ChevronUp, Tv2,
 } from 'lucide-react'
 
 const TABS = [
@@ -15,6 +15,7 @@ const TABS = [
   { id: 'assignments',  label: 'Assignments',      icon: ClipboardList },
   { id: 'session',      label: 'Session',          icon: CalendarClock, adminOnly: true },
   { id: 'students',     label: 'Students',         icon: Users,         adminOnly: true },
+  { id: 'media',        label: 'Media Roles',      icon: Tv2,           adminOnly: true },
 ]
 
 const UPLOAD_TYPES = [
@@ -678,6 +679,83 @@ function StudentsTab() {
   )
 }
 
+// ── Media Roles Tab (Staff — can assign chief-editor) ──────────────────────────
+const STAFF_MEDIA_ROLES = [
+  { value: '',             label: 'No Role' },
+  { value: 'publisher',    label: 'Publisher' },
+  { value: 'editor',       label: 'Editor' },
+  { value: 'chief-editor', label: 'Chief Editor' },
+]
+
+function StaffMediaRolesTab() {
+  const [users, setUsers]     = useState([])
+  const [loading, setLoading] = useState(true)
+  const [search, setSearch]   = useState('')
+  const [actionLoading, setActionLoading] = useState(null)
+
+  const load = () => {
+    setLoading(true)
+    axios.get('/api/media/roles/all', { withCredentials: true, params: { search, limit: 60 } })
+      .then(res => setUsers(res.data.users || []))
+      .catch(() => toast.error('Failed to load users.'))
+      .finally(() => setLoading(false))
+  }
+  useEffect(load, [search])
+
+  const setRole = async (userId, role) => {
+    setActionLoading(userId)
+    try {
+      await axios.put(`/api/media/roles/${userId}`, { role }, { withCredentials: true })
+      setUsers(prev => prev.map(u => u._id === userId ? { ...u, mediaRole: role } : u))
+      toast.success(`Role ${role ? `set to ${role}` : 'removed'}.`)
+    } catch (err) { toast.error(err.response?.data?.message || 'Failed.') }
+    finally { setActionLoading(null) }
+  }
+
+  return (
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm">
+      <div className="px-4 sm:px-5 py-4 border-b border-gray-100">
+        <h2 className="text-base font-bold text-[#1a3c5e] mb-3">Media Roles</h2>
+        <p className="text-xs text-gray-500 mb-3">As staff admin you can assign any role including Chief Editor.</p>
+        <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2">
+          <Search size={14} className="text-gray-400 flex-shrink-0" />
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search users…"
+            className="flex-1 bg-transparent text-sm text-[#1a3c5e] placeholder-gray-400 focus:outline-none" />
+        </div>
+      </div>
+      {loading
+        ? <div className="flex items-center justify-center py-12"><Loader2 size={24} className="animate-spin text-[#1a3c5e]" /></div>
+        : users.length === 0
+          ? <div className="text-center py-10 text-gray-400 text-sm">No users found.</div>
+          : <div className="divide-y divide-gray-50">
+              {users.map(u => (
+                <div key={u._id} className="flex items-center gap-3 px-4 sm:px-5 py-3">
+                  {u.avatar
+                    ? <img src={u.avatar} alt={u.fullName} className="w-9 h-9 rounded-full object-cover flex-shrink-0" />
+                    : <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#1a3c5e] to-[#2563a8] flex items-center justify-center text-white text-xs font-bold flex-shrink-0">{u.fullName?.charAt(0)}</div>
+                  }
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-[#1a3c5e] truncate">{u.fullName}</p>
+                    <p className="text-xs text-gray-400 truncate capitalize">{u.accountType} {u.level ? `· ${u.level}L` : ''}</p>
+                  </div>
+                  <select value={u.mediaRole || ''} onChange={e => setRole(u._id, e.target.value)}
+                    disabled={actionLoading === u._id}
+                    className={`text-xs font-semibold border rounded-xl px-2.5 py-1.5 focus:outline-none transition flex-shrink-0 disabled:opacity-50 ${
+                      u.mediaRole === 'chief-editor' ? 'bg-amber-50 border-amber-200 text-amber-600' :
+                      u.mediaRole === 'editor'       ? 'bg-purple-50 border-purple-200 text-purple-600' :
+                      u.mediaRole === 'publisher'    ? 'bg-blue-50 border-blue-200 text-blue-600' :
+                      'bg-gray-50 border-gray-200 text-gray-500'
+                    }`}>
+                    {STAFF_MEDIA_ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+                  </select>
+                </div>
+              ))}
+            </div>
+      }
+    </div>
+  )
+}
+
 // ── Main Staff Panel ───────────────────────────────────────────────────────────
 export default function StaffPanel() {
   const { user } = useAuth()
@@ -732,6 +810,7 @@ export default function StaffPanel() {
       {activeTab === 'assignments' && <AssignmentsTab />}
       {activeTab === 'session'     && user?.isStaffAdmin && <SessionTab />}
       {activeTab === 'students'    && user?.isStaffAdmin && <StudentsTab />}
+      {activeTab === 'media'       && user?.isStaffAdmin && <StaffMediaRolesTab />}
     </div>
   )
 }
