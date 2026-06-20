@@ -346,10 +346,9 @@ export default function ElectionDetail() {
       {isAdmin && (
         <div className="flex gap-1 mb-6 border-b border-gray-200">
           {[
-            { id: 'overview',     label: 'Overview' },
-            { id: 'aspirants',    label: `Aspirants${allAspirants.length ? ` (${allAspirants.length})` : ''}` },
-            { id: 'results',      label: 'Results' },
-            { id: 'participate',  label: 'Participate' },
+            { id: 'overview',  label: 'Overview' },
+            { id: 'aspirants', label: `Aspirants${allAspirants.length ? ` (${allAspirants.length})` : ''}` },
+            { id: 'results',   label: 'Results' },
           ].map(t => (
             <button key={t.id} onClick={() => { setAdminTab(t.id); if (t.id === 'aspirants') loadAllAspirants(); if (t.id === 'results') loadResults() }}
               className={`px-4 py-2 text-sm font-semibold border-b-2 transition -mb-px ${
@@ -554,9 +553,17 @@ export default function ElectionDetail() {
         </div>
       )}
 
-      {/* ── Student views (also shown to admin via Participate tab) ── */}
-      {(!isAdmin || adminTab === 'participate') && (
+      {/* ── Participation section — visible to everyone (admin + student) ── */}
+      {(
         <>
+          {isAdmin && (
+            <div className="flex items-center gap-3 my-6">
+              <div className="flex-1 h-px bg-gray-200" />
+              <span className="text-xs font-bold text-gray-400 uppercase tracking-widest px-2">Your Participation</span>
+              <div className="flex-1 h-px bg-gray-200" />
+            </div>
+          )}
+
           {/* Draft */}
           {election.status === 'draft' && (
             <div className="text-center py-16">

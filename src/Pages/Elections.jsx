@@ -315,6 +315,20 @@ export default function Elections() {
                           </span>
                         )}
                       </div>
+                      {el.status === 'form_picking' && (
+                        <div className="mt-3">
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 border border-blue-200 text-blue-700 text-xs font-bold rounded-full">
+                            <FileText size={10} /> Aspiration forms open — tap to apply
+                          </span>
+                        </div>
+                      )}
+                      {el.status === 'voting' && (
+                        <div className="mt-3">
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-50 border border-green-200 text-green-700 text-xs font-bold rounded-full">
+                            <Vote size={10} /> Voting is open — tap to cast your vote
+                          </span>
+                        </div>
+                      )}
                     </div>
                     <div className="flex flex-col items-end gap-2 flex-shrink-0">
                       <ChevronRight size={16} className="text-gray-400" />
