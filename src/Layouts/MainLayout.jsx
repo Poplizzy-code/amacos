@@ -7,7 +7,7 @@ import {
   LayoutDashboard, BookOpen, FileQuestion, MessageSquare,
   Monitor, Code2, Compass, FlaskConical, Users, Bell, Shield,
   LogOut, Menu, X, ClipboardList,
-  GraduationCap, ChevronRight, Settings, ArrowLeft, ShieldCheck,
+  GraduationCap, ChevronRight, Settings, ArrowLeft, ShieldCheck, Vote,
 } from 'lucide-react'
 
 const navItems = [
@@ -20,6 +20,7 @@ const navItems = [
   { label: 'CBT',             path: '/app/cbt',            icon: Monitor },
   { label: 'Research & Opps', path: '/app/research',       icon: FlaskConical },
   { label: 'Alumni Network',  path: '/app/alumni',         icon: Users },
+  { label: 'Elections',        path: '/app/elections',      icon: Vote },
   { label: 'Notifications',   path: '/app/notifications',  icon: Bell },
   { label: 'Tech Community',  path: '/app/tech',           icon: Code2,         techOnly: true },
   { label: 'Staff Panel',     path: '/app/staff-panel',    icon: GraduationCap, staffOnly: true },
