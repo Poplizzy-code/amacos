@@ -33,7 +33,7 @@ export default function PublicLayout() {
     <div className="min-h-screen bg-[#060d1a] overflow-x-hidden">
 
       {/* ── Top Navbar ── */}
-      <nav className="sticky top-0 z-20 bg-transparent backdrop-blur-md border-b border-white/5">
+      <nav className="relative z-20 bg-transparent border-b border-white/5">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3 group">
             <img src="/logo.jpeg" alt="AMACOS" className="w-8 h-8 rounded-xl object-cover flex-shrink-0 group-hover:scale-110 transition-transform duration-200 shadow-md" />

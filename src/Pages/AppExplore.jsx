@@ -1,10 +1,11 @@
 import { useState } from 'react'
-import { Rss, Newspaper, Calendar, Star, Megaphone } from 'lucide-react'
+import { Rss, Newspaper, Calendar, Star, Megaphone, Tv2 } from 'lucide-react'
 import SocialFeed from './SocialFeed'
 import NewsFeed from './NewsFeed'
 import Events from './Events'
 import FinalYearSpotlight from './FinalYearSpotlight'
 import PressRelease from './PressRelease'
+import MediaHub from './MediaHub'
 
 const TABS = [
   { id: 'feed',      label: 'Feed',       icon: Rss },
@@ -12,9 +13,9 @@ const TABS = [
   { id: 'events',    label: 'Events',     icon: Calendar },
   { id: 'spotlight', label: 'Spotlight',  icon: Star },
   { id: 'press',     label: 'Press',      icon: Megaphone },
+  { id: 'media',     label: 'Media',      icon: Tv2 },
 ]
 
-// Tab bar height: py-3 (24px) + icon/text row (~20px) + border = ~45px
 const TAB_H = 'top-[45px]'
 
 export default function AppExplore() {
@@ -43,11 +44,10 @@ export default function AppExplore() {
         </div>
       </div>
 
-      {/* Feed: renders full-width with its own sub-header below the tab bar */}
-      {active === 'feed' && <SocialFeed topOffset={TAB_H} />}
+      {active === 'feed'   && <SocialFeed topOffset={TAB_H} />}
+      {active === 'media'  && <MediaHub isApp />}
 
-      {/* Other tabs: padded content area */}
-      {active !== 'feed' && (
+      {active !== 'feed' && active !== 'media' && (
         <div className="max-w-2xl mx-auto px-4 pb-10">
           {active === 'news'      && <NewsFeed />}
           {active === 'events'    && <Events />}

@@ -5,9 +5,9 @@ import { useSocket } from '../context/SocketContext'
 import toast from 'react-hot-toast'
 import {
   LayoutDashboard, BookOpen, FileQuestion, MessageSquare,
-  Monitor, Code2, Compass, FlaskConical, Users, Mail, Bell, Shield,
-  Info, LogOut, Menu, X, ClipboardList,
-  GraduationCap, ChevronRight, Settings, ArrowLeft, ShieldCheck, Tv2,
+  Monitor, Code2, Compass, FlaskConical, Users, Bell, Shield,
+  LogOut, Menu, X, ClipboardList,
+  GraduationCap, ChevronRight, Settings, ArrowLeft, ShieldCheck,
 } from 'lucide-react'
 
 const navItems = [
@@ -16,20 +16,16 @@ const navItems = [
   { label: 'Resources',       path: '/app/resources',      icon: BookOpen },
   { label: 'Past Questions',  path: '/app/past-questions', icon: FileQuestion },
   { label: 'Assignments',     path: '/app/assignments',    icon: ClipboardList },
-  { label: "Let's Talk",      path: '/app/forum',          icon: MessageSquare },
+  { label: "Let's Talk",      path: '/app/lets-talk',      icon: MessageSquare },
   { label: 'CBT',             path: '/app/cbt',            icon: Monitor },
   { label: 'Research & Opps', path: '/app/research',       icon: FlaskConical },
   { label: 'Alumni Network',  path: '/app/alumni',         icon: Users },
-  { label: 'Groups',          path: '/app/groups',         icon: Users },
-  { label: 'AMACOS Media',   path: '/app/media',          icon: Tv2 },
-  { label: 'Messages',        path: '/app/messages',       icon: Mail },
   { label: 'Notifications',   path: '/app/notifications',  icon: Bell },
   { label: 'Tech Community',  path: '/app/tech',           icon: Code2,         techOnly: true },
   { label: 'Staff Panel',     path: '/app/staff-panel',    icon: GraduationCap, staffOnly: true },
   { label: 'Student Panel',   path: '/app/student-panel',  icon: ShieldCheck,   studentAdminOnly: true },
   { label: 'Admin',           path: '/app/admin',          icon: Shield,        staffAdminOnly: true },
   { label: 'Settings',        path: '/app/settings',       icon: Settings },
-  { label: 'About',           path: '/about',              icon: Info },
 ]
 
 export default function MainLayout() {

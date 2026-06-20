@@ -33,6 +33,7 @@ import Settings from './Pages/Settings'
 import Filters from './Pages/Filters'
 import Groups from './Pages/Groups'
 import StudentPanel from './Pages/StudentPanel'
+import LetsTalk from './Pages/LetsTalk'
 import MediaHub from './Pages/MediaHub'
 import MediaChannel from './Pages/MediaChannel'
 import MediaContentPage from './Pages/MediaContentPage'
@@ -119,7 +120,10 @@ const AppRoutes = () => {
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="resources" element={<Resources />} />
         <Route path="past-questions" element={<PastQuestions />} />
-        <Route path="forum" element={<Forum />} />
+        <Route path="lets-talk" element={<LetsTalk />} />
+        <Route path="forum" element={<Navigate to="/app/lets-talk" replace />} />
+        <Route path="messages" element={<Navigate to="/app/lets-talk?tab=messages" replace />} />
+        <Route path="groups" element={<Navigate to="/app/lets-talk?tab=groups" replace />} />
         <Route path="cbt" element={<CBT />} />
         <Route path="tech" element={<TechCommunity />} />
         <Route path="explore" element={<AppExplore />} />

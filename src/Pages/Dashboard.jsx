@@ -14,7 +14,7 @@ const quickLinks = [
 export default function Dashboard() {
   const { user } = useAuth()
   const firstName = user?.fullName?.split(' ')[0]
-  const levelLabel = user?.level === 'staff' ? 'Staff' : user?.level ? `${user.level}L` : ''
+  const levelLabel = user?.isAlumni ? 'Alumni' : user?.level === 'staff' ? 'Staff' : user?.level ? `${user.level}L` : ''
 
   return (
     <div className="min-w-0">
