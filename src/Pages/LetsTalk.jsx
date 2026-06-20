@@ -246,7 +246,6 @@ function GroupsPane({ user }) {
   const [editDesc, setEditDesc] = useState('')
   const [editing, setEditing]   = useState(false)
   const [saving, setSaving]     = useState(false)
-  const [avatarFile, setAvatarFile] = useState(null)
   const [avatarPreview, setAvatarPreview] = useState('')
   const avatarRef = useRef()
 
@@ -328,26 +327,27 @@ function GroupsPane({ user }) {
     finally { setCreating(false) }
   }
 
-  const pickAvatar = (e) => {
+  const pickAvatar = async (e) => {
     const f = e.target.files?.[0]; if (!f) return
-    setAvatarFile(f); setAvatarPreview(URL.createObjectURL(f))
     e.target.value = ''
+    setAvatarPreview(URL.createObjectURL(f))
+    try {
+      const fd = new FormData()
+      fd.append('name', sel.name); fd.append('description', sel.description || ''); fd.append('avatar', f)
+      const { data } = await axios.put(`/api/groups/${sel._id}`, fd)
+      setSel(data.group); setGroups(p => p.map(g => g._id === data.group._id ? data.group : g))
+      setAvatarPreview('')
+      toast.success('Profile picture updated!')
+    } catch { toast.error('Failed to upload photo.'); setAvatarPreview('') }
   }
 
   const saveEdit = async () => {
     if (!editName.trim()) return toast.error('Name required.')
     setSaving(true)
     try {
-      let data
-      if (avatarFile) {
-        const fd = new FormData()
-        fd.append('name', editName); fd.append('description', editDesc); fd.append('avatar', avatarFile)
-        ;({ data } = await axios.put(`/api/groups/${sel._id}`, fd))
-      } else {
-        ;({ data } = await axios.put(`/api/groups/${sel._id}`, { name: editName, description: editDesc }, { headers: { 'Content-Type': 'application/json' } }))
-      }
+      const { data } = await axios.put(`/api/groups/${sel._id}`, { name: editName, description: editDesc }, { headers: { 'Content-Type': 'application/json' } })
       setSel(data.group); setGroups(p => p.map(g => g._id === data.group._id ? data.group : g))
-      setEditing(false); setAvatarFile(null); setAvatarPreview(''); toast.success('Updated.')
+      setEditing(false); toast.success('Updated.')
     } catch { toast.error('Failed.') }
     finally { setSaving(false) }
   }
@@ -402,7 +402,7 @@ function GroupsPane({ user }) {
 
   const openInfo = () => {
     setEditName(sel?.name || ''); setEditDesc(sel?.description || '')
-    setEditing(false); setAvatarFile(null); setAvatarPreview(''); setShowInfo(true)
+    setEditing(false); setAvatarPreview(''); setShowInfo(true)
   }
 
   return (
@@ -461,8 +461,8 @@ function GroupsPane({ user }) {
                   )}
                   <input ref={avatarRef} type="file" accept="image/*" className="hidden" onChange={pickAvatar} />
                 </div>
-                {avatarPreview && isAdmin && (
-                  <p className="text-amber-400 text-xs mt-2">Photo selected — save to apply</p>
+                {avatarPreview && (
+                  <p className="text-gray-500 text-xs mt-2 flex items-center gap-1"><Loader2 size={10} className="animate-spin" /> Uploading…</p>
                 )}
               </div>
 
@@ -480,7 +480,7 @@ function GroupsPane({ user }) {
                         className="flex items-center gap-1 px-3 py-1.5 bg-amber-400 text-[#0a1929] text-xs font-bold rounded-xl disabled:opacity-50">
                         {saving ? <Loader2 size={11} className="animate-spin" /> : <Check size={11} />} Save
                       </button>
-                      <button onClick={() => { setEditing(false); setAvatarFile(null); setAvatarPreview('') }}
+                      <button onClick={() => { setEditing(false); setAvatarPreview('') }}
                         className="px-3 py-1.5 bg-white/10 text-gray-300 text-xs rounded-xl">Cancel</button>
                     </div>
                   </div>
