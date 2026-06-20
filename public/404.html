@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AMACOS | Adeleke University</title>
+    <script>
+      // When Render serves this 404.html for an unmatched path, save the full
+      // URL to sessionStorage then redirect to / so the React app loads.
+      // The app reads it back and restores the path via history.replaceState.
+      var l = window.location;
+      sessionStorage.setItem(
+        '__spa_redirect',
+        l.pathname.slice(1) + (l.search ? '~' + l.search.slice(1) : '') + l.hash
+      );
+      l.replace(l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') + '/');
+    </script>
+  </head>
+  <body></body>
+</html>
