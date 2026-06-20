@@ -452,7 +452,7 @@ export default function ElectionDetail() {
                   ))}
                 </div>
               </div>
-              <button onClick={openVoting} disabled={openingVoting || !votingSetup.votingDeadline}
+              <button onClick={openVoting} disabled={openingVoting}
                 className="w-full flex items-center justify-center gap-2 py-3 bg-green-500 hover:bg-green-400 text-white font-bold text-sm rounded-xl transition disabled:opacity-60">
                 {openingVoting ? <Loader2 size={14} className="animate-spin" /> : <Vote size={14} />}
                 Open Voting Now
