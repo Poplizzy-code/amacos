@@ -108,12 +108,10 @@ const AppRoutes = () => {
         <Route path="/social" element={<SocialFeed />} />
         <Route path="/press" element={<PressRelease />} />
         <Route path="/about" element={<About />} />
+        <Route path="/media" element={<MediaHub />} />
+        <Route path="/media/channel/:slug" element={<MediaChannel />} />
+        <Route path="/media/content/:id" element={<MediaContentPage />} />
       </Route>
-
-      {/* Public media hub — no login needed */}
-      <Route path="/media" element={<MediaHub />} />
-      <Route path="/media/channel/:slug" element={<MediaChannel />} />
-      <Route path="/media/content/:id" element={<MediaContentPage />} />
 
       {/* Protected app pages */}
       <Route path="/app" element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>

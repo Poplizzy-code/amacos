@@ -1,6 +1,6 @@
 import { Outlet, Link, NavLink, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { Menu, X, Rss, Newspaper, Calendar, Star, Megaphone, Info } from 'lucide-react'
+import { Menu, X, Rss, Newspaper, Calendar, Star, Megaphone, Info, Tv2 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 
 const desktopNav = [
@@ -9,6 +9,7 @@ const desktopNav = [
   { label: 'Events',    path: '/events' },
   { label: 'Spotlight', path: '/spotlight' },
   { label: 'Press',     path: '/press' },
+  { label: 'Media',     path: '/media' },
   { label: 'About',     path: '/about' },
 ]
 
@@ -17,7 +18,7 @@ const mobileNav = [
   { label: 'News',      path: '/news',      icon: Newspaper },
   { label: 'Events',    path: '/events',    icon: Calendar },
   { label: 'Spotlight', path: '/spotlight', icon: Star },
-  { label: 'Press',     path: '/press',     icon: Megaphone },
+  { label: 'Media',     path: '/media',     icon: Tv2 },
 ]
 
 export default function PublicLayout() {
@@ -32,7 +33,7 @@ export default function PublicLayout() {
     <div className="min-h-screen bg-[#060d1a] overflow-x-hidden">
 
       {/* ── Top Navbar ── */}
-      <nav className="sticky top-0 z-20" style={{ background: 'transparent' }}>
+      <nav className="sticky top-0 z-20 bg-transparent backdrop-blur-md border-b border-white/5">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3 group">
             <img src="/logo.jpeg" alt="AMACOS" className="w-8 h-8 rounded-xl object-cover flex-shrink-0 group-hover:scale-110 transition-transform duration-200 shadow-md" />
@@ -111,10 +112,11 @@ export default function PublicLayout() {
         )}
       </nav>
 
-      {/* Content — social feed handles its own layout; other pages get a container */}
-      <main className={location.pathname === '/social'
-        ? 'pb-20 md:pb-0'
-        : 'max-w-5xl mx-auto px-4 py-6 pb-24 md:pb-10'
+      {/* Content — social feed and media hub handle their own layout; others get a container */}
+      <main className={
+        location.pathname === '/social' ? 'pb-20 md:pb-0' :
+        location.pathname.startsWith('/media') ? 'pb-20 md:pb-0' :
+        'max-w-5xl mx-auto px-4 py-6 pb-24 md:pb-10'
       }>
         <Outlet />
       </main>
