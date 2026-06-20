@@ -110,11 +110,11 @@ function ResourcesTab() {
       </div>
 
       {showForm && (
-        <form onSubmit={handleUpload} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-4">
+        <form onSubmit={handleUpload} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-5 space-y-4">
           <h3 className="font-semibold text-[#1a3c5e]">Upload Resource</h3>
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-2">File Type</label>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               {UPLOAD_TYPES.map(t => (
                 <button key={t.value} type="button" onClick={() => { setUploadType(t.value); setFile(null); if (fileRef.current) fileRef.current.value = '' }}
                   className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium border transition ${uploadType === t.value ? 'bg-[#1a3c5e] text-white border-[#1a3c5e]' : 'bg-white text-gray-500 border-gray-200 hover:border-[#1a3c5e]/40'}`}>
@@ -147,9 +147,9 @@ function ResourcesTab() {
             <label className="block text-xs font-medium text-gray-600 mb-1.5">File *</label>
             <div onClick={() => fileRef.current?.click()} className="border-2 border-dashed border-gray-200 rounded-xl p-5 text-center cursor-pointer hover:border-[#1a3c5e]/40 hover:bg-gray-50 transition">
               {file ? (
-                <div className="flex items-center justify-center gap-2 text-sm text-[#1a3c5e] font-medium">
-                  <FileText size={18} /><span className="truncate max-w-xs">{file.name}</span>
-                  <button type="button" onClick={e => { e.stopPropagation(); setFile(null); if (fileRef.current) fileRef.current.value = '' }} className="text-gray-400 hover:text-red-400"><X size={15} /></button>
+                <div className="flex items-center justify-center gap-2 text-sm text-[#1a3c5e] font-medium min-w-0">
+                  <FileText size={18} className="flex-shrink-0" /><span className="truncate min-w-0 max-w-[180px] sm:max-w-xs">{file.name}</span>
+                  <button type="button" onClick={e => { e.stopPropagation(); setFile(null); if (fileRef.current) fileRef.current.value = '' }} className="text-gray-400 hover:text-red-400 flex-shrink-0"><X size={15} /></button>
                 </div>
               ) : (
                 <><Upload size={22} className="mx-auto mb-2 text-gray-300" /><p className="text-sm text-gray-400">Click to select {uploadType}</p></>
@@ -169,13 +169,13 @@ function ResourcesTab() {
         ) : (
           <div className="divide-y divide-gray-50">
             {resources.map(r => (
-              <div key={r._id} className="flex items-center gap-4 px-5 py-4 hover:bg-gray-50/50">
-                <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center flex-shrink-0"><FileText size={18} className="text-amber-500" /></div>
+              <div key={r._id} className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50/50">
+                <div className="w-9 h-9 rounded-xl bg-amber-50 flex items-center justify-center flex-shrink-0"><FileText size={16} className="text-amber-500" /></div>
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-gray-800 text-sm truncate">{r.title}</p>
-                  <p className="text-xs text-gray-400">{r.category} · {new Date(r.createdAt).toLocaleDateString()}</p>
+                  <p className="text-xs text-gray-400 truncate">{r.category} · {new Date(r.createdAt).toLocaleDateString()}</p>
                 </div>
-                <div className="flex gap-2 flex-shrink-0">
+                <div className="flex gap-1.5 flex-shrink-0">
                   <a href={r.fileUrl} target="_blank" rel="noopener noreferrer" className="p-1.5 text-blue-400 hover:bg-blue-50 rounded-lg"><Eye size={15} /></a>
                   <ConfirmButton label="Delete" icon={Trash2} onClick={() => deleteResource(r._id)} className="p-1.5 text-red-400 hover:bg-red-50 rounded-lg" />
                 </div>
@@ -241,7 +241,7 @@ function CBTTab() {
       </div>
 
       {showForm && (
-        <form onSubmit={handleSave} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-4">
+        <form onSubmit={handleSave} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-5 space-y-4">
           <h3 className="font-semibold text-[#1a3c5e]">New CBT Question</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
@@ -374,7 +374,7 @@ function AssignmentsTab() {
       </div>
 
       {showForm && (
-        <form onSubmit={handleSave} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-4">
+        <form onSubmit={handleSave} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-5 space-y-4">
           <h3 className="font-semibold text-[#1a3c5e]">Post Assignment</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
@@ -400,7 +400,7 @@ function AssignmentsTab() {
           </div>
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-2">Attachment (optional)</label>
-            <div className="flex gap-2 mb-2">
+            <div className="flex flex-wrap gap-2 mb-2">
               {UPLOAD_TYPES.map(t => (
                 <button key={t.value} type="button" onClick={() => { setUploadType(t.value); setFile(null); if (fileRef.current) fileRef.current.value = '' }}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition ${uploadType === t.value ? 'bg-[#1a3c5e] text-white border-[#1a3c5e]' : 'bg-white text-gray-500 border-gray-200'}`}>
@@ -431,7 +431,7 @@ function AssignmentsTab() {
           {assignments.map(a => {
             const overdue = new Date(a.dueDate) < new Date()
             return (
-              <div key={a._id} className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm flex gap-4">
+              <div key={a._id} className="bg-white rounded-2xl border border-gray-100 p-3 sm:p-4 shadow-sm flex gap-3">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1 flex-wrap">
                     <h3 className="font-semibold text-[#1a3c5e] text-sm">{a.title}</h3>

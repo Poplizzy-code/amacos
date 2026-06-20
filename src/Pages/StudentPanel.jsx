@@ -579,7 +579,7 @@ function FilesTab({ isPastQuestions = false }) {
         </button>
       </div>
       {showForm && (
-        <form onSubmit={handleUpload} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-4">
+        <form onSubmit={handleUpload} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-5 space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className={isPastQuestions ? 'sm:col-span-2' : ''}>
               <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide block mb-1">Title *</label>
@@ -609,10 +609,10 @@ function FilesTab({ isPastQuestions = false }) {
             <div onClick={() => fileRef.current?.click()}
               className="border-2 border-dashed border-gray-200 rounded-xl p-5 text-center cursor-pointer hover:border-[#1a3c5e]/40 hover:bg-gray-50 transition">
               {file
-                ? <div className="flex items-center justify-center gap-2 text-sm text-[#1a3c5e] font-medium">
-                    <FileText size={16} /><span className="truncate max-w-xs">{file.name}</span>
+                ? <div className="flex items-center justify-center gap-2 text-sm text-[#1a3c5e] font-medium min-w-0">
+                    <FileText size={16} className="flex-shrink-0" /><span className="truncate min-w-0 max-w-[160px] sm:max-w-xs">{file.name}</span>
                     <button type="button" onClick={e => { e.stopPropagation(); setFile(null); if (fileRef.current) fileRef.current.value = '' }}>
-                      <X size={14} className="text-gray-400 hover:text-red-400" />
+                      <X size={14} className="text-gray-400 hover:text-red-400 flex-shrink-0" />
                     </button>
                   </div>
                 : <><Upload size={20} className="mx-auto mb-2 text-gray-300" /><p className="text-sm text-gray-400">Click to select file (PDF, doc, image…)</p></>
@@ -633,15 +633,15 @@ function FilesTab({ isPastQuestions = false }) {
             ? <div className="p-10 text-center"><BookOpen size={28} className="mx-auto mb-3 text-gray-300" /><p className="text-gray-400 text-sm">No {title.toLowerCase()} yet.</p></div>
             : <div className="divide-y divide-gray-50">
                 {items.map(r => (
-                  <div key={r._id} className="flex items-center gap-4 px-5 py-4 hover:bg-gray-50/50">
-                    <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center flex-shrink-0">
-                      <FileText size={18} className="text-amber-500" />
+                  <div key={r._id} className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50/50">
+                    <div className="w-9 h-9 rounded-xl bg-amber-50 flex items-center justify-center flex-shrink-0">
+                      <FileText size={16} className="text-amber-500" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-gray-800 text-sm truncate">{r.title}</p>
-                      <p className="text-xs text-gray-400">{r.category} · {new Date(r.createdAt).toLocaleDateString()} · By {r.uploadedBy?.fullName}</p>
+                      <p className="text-xs text-gray-400 truncate">{r.category} · {new Date(r.createdAt).toLocaleDateString()} · {r.uploadedBy?.fullName}</p>
                     </div>
-                    <div className="flex gap-2 flex-shrink-0">
+                    <div className="flex gap-1.5 flex-shrink-0">
                       <a href={r.fileUrl} target="_blank" rel="noopener noreferrer" className="p-1.5 text-blue-400 hover:bg-blue-50 rounded-lg"><Eye size={15} /></a>
                       <ConfirmButton label="Delete" icon={Trash2} onClick={() => remove(r._id)} className="p-1.5 text-red-400 hover:bg-red-50 rounded-lg" />
                     </div>
