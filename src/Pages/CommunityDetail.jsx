@@ -7,7 +7,7 @@ import {
   ArrowLeft, Loader2, Users, Crown, Shield, CheckCircle2, Clock,
   X, Check, ChevronDown, ChevronUp, Link2, Copy, Image as ImageIcon,
   Video, Globe, Lock, Trash2, Plus, ExternalLink, Mail, Phone,
-  Twitter, Instagram, Edit2, Save, AlertCircle, Play,
+  Edit2, Save, AlertCircle, Play,
 } from 'lucide-react'
 
 const PLAN_LIMITS = {
@@ -388,8 +388,8 @@ export default function CommunityDetail() {
                     <div className="mt-3 flex flex-wrap gap-2">
                       {fp.contact?.whatsapp && <a href={`https://wa.me/${fp.contact.whatsapp.replace(/\D/g,'')}`} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-xs text-green-600 hover:underline"><Phone size={11} /> WhatsApp</a>}
                       {fp.contact?.email && <a href={`mailto:${fp.contact.email}`} className="flex items-center gap-1 text-xs text-blue-600 hover:underline"><Mail size={11} /> Email</a>}
-                      {fp.contact?.twitter && <a href={`https://twitter.com/${fp.contact.twitter.replace('@','')}`} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-xs text-sky-500 hover:underline"><Twitter size={11} /> Twitter</a>}
-                      {fp.contact?.instagram && <a href={`https://instagram.com/${fp.contact.instagram.replace('@','')}`} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-xs text-pink-500 hover:underline"><Instagram size={11} /> Instagram</a>}
+                      {fp.contact?.twitter && <a href={`https://twitter.com/${fp.contact.twitter.replace('@','')}`} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-xs text-sky-500 hover:underline"><ExternalLink size={11} /> Twitter</a>}
+                      {fp.contact?.instagram && <a href={`https://instagram.com/${fp.contact.instagram.replace('@','')}`} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-xs text-pink-500 hover:underline"><ExternalLink size={11} /> Instagram</a>}
                       {fp.contact?.other && <a href={fp.contact.other} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-xs text-gray-600 hover:underline"><ExternalLink size={11} /> Contact</a>}
                     </div>
                   )}
