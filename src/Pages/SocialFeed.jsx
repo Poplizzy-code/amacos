@@ -1646,7 +1646,7 @@ function PostCard({ post, currentUser, onDelete, onLike, onOpenComments, onShare
 }
 
 // ── Main ───────────────────────────────────────────────────────────────────────
-export default function SocialFeed({ topOffset = 'top-0' }) {
+export default function SocialFeed({ topOffset = 'top-0', hideHeader = false }) {
   const { user, loading: authLoading } = useAuth()
   const [posts, setPosts] = useState([])
   const [loading, setLoading] = useState(true)
@@ -1744,33 +1744,35 @@ export default function SocialFeed({ topOffset = 'top-0' }) {
   return (
     <div className="relative min-h-full bg-[#060d1a]">
 
-      {/* ── Sticky top bar ── */}
-      <div className={`sticky ${topOffset} z-20 bg-[#060d1a]/95 backdrop-blur-md border-b border-white/5`}>
-        <div className="px-4 pt-3 pb-0 flex items-center justify-between max-w-2xl mx-auto">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[#1a3c5e] to-[#2a5a8e] flex items-center justify-center">
-              <span className="text-white text-xs font-black">A</span>
+      {/* ── Sticky top bar — hidden inside the app (MainLayout already has a header) ── */}
+      {!hideHeader && (
+        <div className={`sticky ${topOffset} z-20 bg-[#060d1a]/95 backdrop-blur-md border-b border-white/5`}>
+          <div className="px-4 pt-3 pb-0 flex items-center justify-between max-w-2xl mx-auto">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[#1a3c5e] to-[#2a5a8e] flex items-center justify-center">
+                <span className="text-white text-xs font-black">A</span>
+              </div>
+              <h1 className="font-black text-white text-lg tracking-tight">AMACOS Feed</h1>
             </div>
-            <h1 className="font-black text-white text-lg tracking-tight">AMACOS Feed</h1>
+            {user && (
+              <button onClick={() => setDmOpen(true)}
+                className="w-9 h-9 flex items-center justify-center rounded-2xl hover:bg-white/5 text-gray-400 hover:text-white transition">
+                <MessageCircle size={21} />
+              </button>
+            )}
           </div>
-          {user && (
-            <button onClick={() => setDmOpen(true)}
-              className="w-9 h-9 flex items-center justify-center rounded-2xl hover:bg-white/5 text-gray-400 hover:text-white transition">
-              <MessageCircle size={21} />
-            </button>
-          )}
+          <div className="px-4 flex gap-6 mt-1 max-w-2xl mx-auto">
+            {[['all', 'For You'], ['amacos', 'AMACOS Only']].map(([val, label]) => (
+              <button key={val} onClick={() => setTab(val)}
+                className={`text-sm font-bold pb-2.5 border-b-2 transition-all ${
+                  tab === val ? 'text-white border-white' : 'text-gray-600 border-transparent hover:text-gray-400'
+                }`}>
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
-        <div className="px-4 flex gap-6 mt-1 max-w-2xl mx-auto">
-          {[['all', 'For You'], ['amacos', 'AMACOS Only']].map(([val, label]) => (
-            <button key={val} onClick={() => setTab(val)}
-              className={`text-sm font-bold pb-2.5 border-b-2 transition-all ${
-                tab === val ? 'text-white border-white' : 'text-gray-600 border-transparent hover:text-gray-400'
-              }`}>
-              {label}
-            </button>
-          ))}
-        </div>
-      </div>
+      )}
 
       {/* ── Feed ── */}
       <div className="pb-28 max-w-2xl mx-auto">
