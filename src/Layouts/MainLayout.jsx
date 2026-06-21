@@ -3,6 +3,7 @@ import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useSocket } from '../context/SocketContext'
 import toast from 'react-hot-toast'
+import BuddyWidget from '../Components/BuddyWidget'
 import {
   LayoutDashboard, BookOpen, FileQuestion, MessageSquare,
   Monitor, Compass, FlaskConical, Users, Bell, Shield,
@@ -207,6 +208,8 @@ export default function MainLayout() {
           <Outlet />
         </main>
       </div>
+
+      <BuddyWidget />
     </div>
   )
 }
