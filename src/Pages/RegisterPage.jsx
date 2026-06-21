@@ -65,6 +65,7 @@ export default function RegisterPage() {
           <p className="text-blue-200 text-lg">Access past questions, resources, CBT, forums, and the tech community.</p>
         </div>
         <p className="relative text-blue-400 text-sm">© 2026 AMACOS. Adeleke University.</p>
+        <p className="relative text-blue-600/60 text-xs mt-1">Built by Bukunmi · Flamedev Studio · NEXUS Team 2026/2027</p>
       </div>
 
       {/* Right panel */}

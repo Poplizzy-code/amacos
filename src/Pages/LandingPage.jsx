@@ -464,7 +464,7 @@ export default function LandingPage() {
       </div>
 
       {/* Slide controls */}
-      <div className="relative z-20 flex-shrink-0 flex items-center justify-center gap-4 py-5 border-t border-white/5">
+      <div className="relative z-20 flex-shrink-0 flex items-center justify-center gap-4 pt-5 pb-2 border-t border-white/5">
         <button onClick={prev}
           className="text-blue-500 hover:text-white transition p-2 rounded-xl hover:bg-white/5">
           <ChevronLeft size={20} />
@@ -488,6 +488,16 @@ export default function LandingPage() {
         <span className="absolute right-6 text-blue-600 text-xs tabular-nums">
           {current + 1} / {total}
         </span>
+      </div>
+
+      {/* Credit line */}
+      <div className="relative z-20 flex-shrink-0 pb-4 flex items-center justify-center gap-1.5 flex-wrap">
+        <span className="text-white/20 text-[10px]">Built by</span>
+        <span className="text-amber-400/70 text-[10px] font-bold">Bukunmi</span>
+        <span className="text-white/15 text-[10px]">·</span>
+        <span className="text-white/40 text-[10px] font-semibold">Flamedev Studio</span>
+        <span className="text-white/15 text-[10px]">·</span>
+        <span className="text-white/20 text-[10px]">AMACOS NEXUS Team 2026/2027</span>
       </div>
 
     </div>

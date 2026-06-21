@@ -546,6 +546,42 @@ export default function Settings() {
       {activeTab === 'profile'   && <ProfileTab user={user} setUser={setUser} />}
       {activeTab === 'staff'     && <StaffSettingsTab />}
       {activeTab === 'students'  && <StudentSettingsTab />}
+
+      {/* About this platform */}
+      <div className="rounded-2xl border border-gray-100 bg-white shadow-sm overflow-hidden mt-2">
+        <div className="px-5 py-3 border-b border-gray-100">
+          <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">About this Platform</p>
+        </div>
+        <div className="px-5 py-4 space-y-3">
+          <div className="flex items-center gap-3">
+            <img src="/logo.jpeg" alt="AMACOS" className="w-10 h-10 rounded-xl object-cover shadow-sm flex-shrink-0" />
+            <div>
+              <p className="text-[#1a3c5e] font-black text-sm">AMACOS Campus Platform</p>
+              <p className="text-gray-400 text-xs">Adeleke University · Mass Communication</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3 text-xs pt-1">
+            <div>
+              <p className="text-gray-400 font-semibold">Executive Session</p>
+              <p className="text-gray-700 font-bold mt-0.5">NEXUS Team 2026/2027</p>
+            </div>
+            <div>
+              <p className="text-gray-400 font-semibold">Version</p>
+              <p className="text-gray-700 font-bold mt-0.5">1.0.0</p>
+            </div>
+          </div>
+          <div className="pt-2 border-t border-gray-100 flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center flex-shrink-0">
+              <span className="text-white text-[10px] font-black">F</span>
+            </div>
+            <div>
+              <p className="text-gray-500 text-[11px]">Designed & developed by</p>
+              <p className="text-[#1a3c5e] font-black text-xs">Bukunmi <span className="text-gray-400 font-normal">·</span> <span className="text-amber-500">Flamedev Studio</span></p>
+            </div>
+          </div>
+          <p className="text-gray-300 text-[10px]">© 2026 AMACOS. All rights reserved.</p>
+        </div>
+      </div>
     </div>
   )
 }
