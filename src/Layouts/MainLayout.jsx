@@ -155,29 +155,29 @@ export default function MainLayout() {
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
 
         {/* Top bar */}
-        <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-gray-200/70 px-3 py-2.5 flex items-center justify-between flex-shrink-0 shadow-sm">
+        <header className="sticky top-0 z-30 bg-[#060d1a]/95 backdrop-blur-xl border-b border-white/8 px-3 py-2.5 flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-1 lg:hidden">
             <button onClick={() => setSidebarOpen(true)}
-              className="p-2 rounded-xl hover:bg-gray-100 text-gray-500 transition">
+              className="p-2 rounded-xl hover:bg-white/10 text-white/70 transition">
               <Menu size={20} />
             </button>
             {!isDashboard && (
               <button onClick={() => navigate(-1)}
-                className="p-2 rounded-xl hover:bg-gray-100 text-gray-500 transition">
+                className="p-2 rounded-xl hover:bg-white/10 text-white/70 transition">
                 <ArrowLeft size={20} />
               </button>
             )}
           </div>
 
           <div className="hidden lg:flex items-center gap-2 text-sm">
-            <span className="font-bold text-[#1a3c5e]">AMACOS</span>
-            <span className="text-gray-300">/</span>
-            <span className="text-gray-400 text-xs">Mass Communication Department</span>
+            <span className="font-bold text-white">AMACOS</span>
+            <span className="text-white/20">/</span>
+            <span className="text-white/40 text-xs">Mass Communication Department</span>
           </div>
 
           <div className="flex items-center gap-2">
             <NavLink to="/app/notifications"
-              className="p-2 rounded-xl hover:bg-gray-100 text-gray-500 relative transition"
+              className="p-2 rounded-xl hover:bg-white/10 text-white/60 relative transition"
               onClick={() => resetNotifCount()}>
               <Bell size={18} />
               {notifCount > 0 && (
@@ -197,7 +197,7 @@ export default function MainLayout() {
                   </div>
                 )}
               </div>
-              <span className="hidden sm:block text-xs font-semibold text-gray-700 max-w-[80px] truncate">{firstName}</span>
+              <span className="hidden sm:block text-xs font-semibold text-white/70 max-w-[80px] truncate">{firstName}</span>
             </div>
           </div>
         </header>

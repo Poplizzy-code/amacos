@@ -23,7 +23,7 @@ export default function AppExplore() {
     <div className="relative -m-4 lg:-m-6 bg-[#060d1a]" style={{ minHeight: 'calc(100% + 0px)', paddingBottom: '64px' }}>
 
       {/* Content — no top bar */}
-      {active === 'feed'  && <SocialFeed topOffset="top-0" hideHeader />}
+      {active === 'feed'  && <SocialFeed topOffset="top-0" />}
       {active === 'media' && <MediaHub isApp />}
 
       {active !== 'feed' && active !== 'media' && (
