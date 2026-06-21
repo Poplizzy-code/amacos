@@ -30,16 +30,16 @@ export default function LoginPage() {
     <div className="min-h-screen flex">
       {/* Left panel */}
       <div className="hidden lg:flex w-1/2 flex-col justify-between p-12 text-white relative overflow-hidden"
-        style={{ background: 'linear-gradient(145deg, #0d2137 0%, #1a3c5e 50%, #1e4976 100%)' }}>
+        style={{
+          backgroundImage: 'url(/bg-login.png)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}>
+        {/* Dark overlay so text stays readable */}
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(145deg, rgba(6,13,26,0.82) 0%, rgba(13,33,55,0.75) 50%, rgba(10,25,46,0.80) 100%)' }} />
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-0 right-0 w-96 h-96 rounded-full opacity-20"
-            style={{ background: 'radial-gradient(circle, #3b82f6 0%, transparent 70%)', transform: 'translate(30%, -30%)' }} />
-          <div className="absolute bottom-0 left-0 w-80 h-80 rounded-full opacity-15"
+          <div className="absolute bottom-0 left-0 w-80 h-80 rounded-full opacity-20"
             style={{ background: 'radial-gradient(circle, #fbbf24 0%, transparent 70%)', transform: 'translate(-30%, 30%)' }} />
-          <div className="absolute inset-0 opacity-[0.04]" style={{
-            backgroundImage: 'linear-gradient(rgba(255,255,255,1) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,1) 1px,transparent 1px)',
-            backgroundSize: '40px 40px',
-          }} />
         </div>
         <div className="relative flex items-center gap-3">
           <div className="w-10 h-10 bg-amber-400 rounded-xl flex items-center justify-center shadow-lg">
