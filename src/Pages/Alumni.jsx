@@ -6,7 +6,7 @@ import {
   Briefcase, User, Plus, Search, Loader2, X, Check,
   ChevronDown, ChevronUp, ExternalLink, Mail, Phone,
   MapPin, Calendar, Edit2, Save, Trash2, ArrowLeft, Send,
-  BookOpen, Star, CheckCircle2, AlertCircle,
+  BookOpen, Star, CheckCircle2, AlertCircle, GraduationCap,
 } from 'lucide-react'
 
 const FIELDS = [
@@ -62,6 +62,164 @@ function Avatar({ name, src, size = 12 }) {
     <div className="rounded-full flex-shrink-0 bg-gradient-to-br from-[#1a3c5e] to-[#2a5298] flex items-center justify-center text-white font-bold"
       style={{ width: px, height: px, fontSize: size > 10 ? 16 : 12 }}>
       {name?.charAt(0)?.toUpperCase()}
+    </div>
+  )
+}
+
+// ── Undergrad gate ────────────────────────────────────────────────────────────
+function UndergradGate() {
+  return (
+    <div className="flex flex-col items-center justify-center min-h-[70vh] px-6 text-center select-none">
+      <div className="text-7xl mb-5">😂</div>
+      <div className="bg-white rounded-3xl border-2 border-dashed border-amber-300 px-8 py-8 max-w-sm shadow-sm">
+        <p className="text-2xl font-black text-[#1a3c5e] mb-2">Oga, not yet!</p>
+        <p className="text-gray-600 text-sm leading-relaxed">
+          This section is strictly for <span className="font-bold text-amber-500">AMACOS Alumni</span> —
+          the ones who have already survived Mass Comm. 🎓
+        </p>
+        <div className="mt-4 py-3 px-4 bg-amber-50 rounded-2xl border border-amber-200">
+          <p className="text-amber-700 text-sm font-semibold">
+            You're still an undergraduate. 📚
+          </p>
+          <p className="text-amber-600 text-xs mt-1">
+            Close this tab, open your textbooks, and come back when you've collected your certificate. We'll be waiting. 😅
+          </p>
+        </div>
+        <p className="text-gray-400 text-xs mt-4 italic">
+          "Face your studies first, dear." — every alumni ever
+        </p>
+      </div>
+    </div>
+  )
+}
+
+// ── Profile detail view ───────────────────────────────────────────────────────
+function ProfileDetail({ profileId, currentUserId, onBack, onMentorship }) {
+  const [profile, setProfile]   = useState(null)
+  const [opps, setOpps]         = useState([])
+  const [loading, setLoading]   = useState(true)
+  const [expandedOpp, setExpOpp] = useState(null)
+
+  useEffect(() => {
+    setLoading(true)
+    axios.get(`/api/alumni/profiles/${profileId}`)
+      .then(r => { setProfile(r.data.profile); setOpps(r.data.opportunities || []) })
+      .catch(() => toast.error('Failed to load profile.'))
+      .finally(() => setLoading(false))
+  }, [profileId])
+
+  if (loading) return <div className="flex justify-center py-24"><Loader2 size={22} className="animate-spin text-[#1a3c5e]" /></div>
+  if (!profile) return (
+    <div className="text-center py-16">
+      <button onClick={onBack} className="flex items-center gap-1.5 text-[#1a3c5e] text-sm font-semibold mb-6"><ArrowLeft size={14} /> Back</button>
+      <p className="text-gray-500">Profile not found.</p>
+    </div>
+  )
+
+  const isOwnProfile = profile.user?._id?.toString() === currentUserId || profile.user?.toString() === currentUserId
+
+  return (
+    <div className="max-w-2xl mx-auto pb-10">
+      <button onClick={onBack} className="flex items-center gap-1.5 text-[#1a3c5e] text-sm font-semibold mb-5 hover:opacity-70 transition">
+        <ArrowLeft size={14} /> Back
+      </button>
+
+      {/* Header card */}
+      <div className="bg-white rounded-2xl border border-gray-200 p-5 mb-4">
+        <div className="flex items-start gap-4">
+          <Avatar name={profile.fullName} src={profile.avatar} size={16} />
+          <div className="flex-1 min-w-0">
+            <p className="text-gray-800 font-black text-lg leading-tight">{profile.fullName}</p>
+            {(profile.currentRole || profile.currentCompany) && (
+              <p className="text-gray-500 text-sm mt-0.5">{[profile.currentRole, profile.currentCompany].filter(Boolean).join(' · ')}</p>
+            )}
+            <div className="flex items-center gap-2 mt-2 flex-wrap">
+              <FieldBadge field={profile.field} />
+              <span className="text-gray-400 text-xs flex items-center gap-1"><GraduationCap size={11} /> Class of {profile.graduationYear}</span>
+              {profile.openToMentorship && <span className="text-xs text-green-600 font-semibold flex items-center gap-1"><BookOpen size={10} /> Open to mentorship</span>}
+            </div>
+            {profile.location && <p className="text-gray-400 text-xs mt-1.5 flex items-center gap-1"><MapPin size={10} /> {profile.location}</p>}
+          </div>
+        </div>
+
+        {profile.bio && <p className="text-gray-600 text-sm mt-4 leading-relaxed">{profile.bio}</p>}
+
+        {profile.achievements?.filter(Boolean).length > 0 && (
+          <div className="mt-4 pt-4 border-t border-gray-100 space-y-1.5">
+            <p className="text-gray-500 text-xs font-bold uppercase tracking-wider mb-2">Achievements</p>
+            {profile.achievements.filter(Boolean).map((a, i) => (
+              <div key={i} className="flex items-start gap-2">
+                <Star size={11} className="text-amber-400 mt-0.5 flex-shrink-0" />
+                <p className="text-gray-600 text-sm">{a}</p>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Contact */}
+        {Object.values(profile.contact || {}).some(Boolean) && (
+          <div className="mt-4 pt-4 border-t border-gray-100 flex flex-wrap gap-3">
+            {profile.contact?.email && <a href={`mailto:${profile.contact.email}`} className="flex items-center gap-1 text-xs text-blue-600 hover:underline"><Mail size={11} /> Email</a>}
+            {profile.contact?.whatsapp && <a href={`https://wa.me/${profile.contact.whatsapp.replace(/\D/g,'')}`} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-xs text-green-600 hover:underline"><Phone size={11} /> WhatsApp</a>}
+            {profile.contact?.linkedin && <a href={profile.contact.linkedin} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-xs text-blue-500 hover:underline"><ExternalLink size={11} /> LinkedIn</a>}
+            {profile.contact?.twitter && <a href={`https://twitter.com/${profile.contact.twitter.replace('@','')}`} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-xs text-sky-500 hover:underline"><ExternalLink size={11} /> Twitter</a>}
+            {profile.contact?.instagram && <a href={`https://instagram.com/${profile.contact.instagram.replace('@','')}`} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-xs text-pink-500 hover:underline"><ExternalLink size={11} /> Instagram</a>}
+          </div>
+        )}
+
+        {/* Mentorship CTA */}
+        {profile.openToMentorship && !isOwnProfile && (
+          <button onClick={() => onMentorship(profile)}
+            className="mt-4 w-full flex items-center justify-center gap-2 py-2.5 bg-[#1a3c5e]/10 hover:bg-[#1a3c5e]/20 text-[#1a3c5e] font-bold text-sm rounded-xl transition">
+            <BookOpen size={14} /> Request Mentorship
+          </button>
+        )}
+      </div>
+
+      {/* Their opportunities */}
+      {opps.length > 0 && (
+        <div>
+          <p className="text-gray-600 font-bold text-sm mb-3 px-1">Opportunities from {profile.fullName?.split(' ')[0]}</p>
+          {opps.map(o => {
+            const open = expandedOpp === o._id
+            const expired = o.deadline && new Date(o.deadline) < new Date()
+            return (
+              <div key={o._id} className="bg-white rounded-2xl border border-gray-200 p-4 mb-3">
+                <div className="flex items-start gap-2">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap mb-1">
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full capitalize ${TYPE_COLORS[o.type] || ''}`}>{o.type}</span>
+                      <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full capitalize ${o.locationType === 'remote' ? 'bg-green-50 text-green-600' : 'bg-gray-100 text-gray-600'}`}>{o.locationType}</span>
+                      {expired && <span className="text-[10px] font-bold text-red-500 bg-red-50 px-2 py-0.5 rounded-full">Expired</span>}
+                    </div>
+                    <p className="text-gray-800 font-bold text-sm">{o.title}</p>
+                    {o.company && <p className="text-gray-500 text-xs">{o.company}</p>}
+                    {o.deadline && <p className="text-gray-400 text-xs mt-0.5 flex items-center gap-1"><Calendar size={10} /> {expired ? 'Closed' : `Deadline: ${new Date(o.deadline).toLocaleDateString()}`}</p>}
+                  </div>
+                  <button onClick={() => setExpOpp(open ? null : o._id)} className="p-1.5 text-gray-400">
+                    {open ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                  </button>
+                </div>
+                {open && (
+                  <div className="mt-3 space-y-3">
+                    <p className="text-gray-600 text-sm whitespace-pre-wrap">{o.description}</p>
+                    <div className="flex gap-2 flex-wrap pt-1">
+                      {o.applyLink && <a href={o.applyLink} target="_blank" rel="noreferrer"
+                        className="flex items-center gap-1.5 px-4 py-2 bg-[#1a3c5e] text-white text-xs font-bold rounded-xl">
+                        <ExternalLink size={12} /> Apply Now
+                      </a>}
+                      {o.applyEmail && <a href={`mailto:${o.applyEmail}`}
+                        className="flex items-center gap-1.5 px-4 py-2 bg-gray-100 text-gray-700 text-xs font-bold rounded-xl">
+                        <Mail size={12} /> {o.applyEmail}
+                      </a>}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
 }
@@ -151,7 +309,6 @@ function ProfileForm({ profile, userAvatar, onSaved, onCancel }) {
         <h2 className="text-[#1a3c5e] font-black text-lg">Edit Alumni Profile</h2>
       </div>
 
-      {/* Avatar — defaults to account avatar, can upload alumni-specific one */}
       <div className="rounded-2xl border border-gray-200 p-4">
         <p className="text-gray-600 font-bold text-xs uppercase tracking-wider mb-3">Profile Photo</p>
         <div className="flex items-center gap-4">
@@ -164,12 +321,11 @@ function ProfileForm({ profile, userAvatar, onSaved, onCancel }) {
             <button onClick={() => fileRef.current?.click()} className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs font-semibold rounded-xl transition">
               Upload Different Photo
             </button>
-            <p className="text-gray-400 text-xs mt-1">Defaults to your account avatar. Upload a different one for your alumni profile if you'd like.</p>
+            <p className="text-gray-400 text-xs mt-1">Defaults to your account avatar. Upload a different one if you'd like.</p>
           </div>
         </div>
       </div>
 
-      {/* Career info */}
       <div className="rounded-2xl border border-gray-200 p-4 space-y-3">
         <p className="text-gray-600 font-bold text-xs uppercase tracking-wider">Career Info</p>
         <div className="grid grid-cols-2 gap-3">
@@ -206,13 +362,12 @@ function ProfileForm({ profile, userAvatar, onSaved, onCancel }) {
         </div>
       </div>
 
-      {/* Achievements */}
       <div className="rounded-2xl border border-gray-200 p-4 space-y-3">
         <p className="text-gray-600 font-bold text-xs uppercase tracking-wider">Notable Achievements</p>
         {form.achievements.map((a, i) => (
           <div key={i} className="flex gap-2">
             <input value={a} onChange={e => setF('achievements', form.achievements.map((x, j) => j === i ? e.target.value : x))}
-              placeholder={`e.g. Award, publication, project…`} style={{ fontSize: 16 }}
+              placeholder="e.g. Award, publication, project…" style={{ fontSize: 16 }}
               className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none" />
             {form.achievements.length > 1 && <button onClick={() => setF('achievements', form.achievements.filter((_, j) => j !== i))} className="p-2 text-gray-400 hover:text-red-500"><X size={13} /></button>}
           </div>
@@ -220,9 +375,8 @@ function ProfileForm({ profile, userAvatar, onSaved, onCancel }) {
         <button onClick={() => setF('achievements', [...form.achievements, ''])} className="text-xs text-[#1a3c5e] flex items-center gap-1"><Plus size={11} /> Add achievement</button>
       </div>
 
-      {/* Contact */}
       <div className="rounded-2xl border border-gray-200 p-4 space-y-3">
-        <p className="text-gray-600 font-bold text-xs uppercase tracking-wider">Contact <span className="text-gray-400 font-normal normal-case">(visible to other members)</span></p>
+        <p className="text-gray-600 font-bold text-xs uppercase tracking-wider">Contact <span className="text-gray-400 font-normal normal-case">(visible to members)</span></p>
         <div className="grid grid-cols-2 gap-3">
           {[['email','Email'],['whatsapp','WhatsApp'],['linkedin','LinkedIn URL'],['twitter','Twitter / X'],['instagram','Instagram']].map(([k, l]) => (
             <div key={k}>
@@ -233,11 +387,10 @@ function ProfileForm({ profile, userAvatar, onSaved, onCancel }) {
         </div>
       </div>
 
-      {/* Mentorship toggle */}
       <div className="rounded-2xl border border-gray-200 p-4 flex items-center justify-between">
         <div>
           <p className="text-gray-800 font-bold text-sm">Open to Mentorship</p>
-          <p className="text-gray-500 text-xs mt-0.5">Students will be able to send you mentorship requests</p>
+          <p className="text-gray-500 text-xs mt-0.5">Members can send you mentorship requests</p>
         </div>
         <div onClick={() => setF('openToMentorship', !form.openToMentorship)}
           className={`w-11 h-6 rounded-full relative cursor-pointer transition-colors ${form.openToMentorship ? 'bg-[#1a3c5e]' : 'bg-gray-300'}`}>
@@ -362,6 +515,10 @@ function OpportunityForm({ existing, onSaved, onCancel }) {
 export default function Alumni() {
   const { user } = useAuth()
   const isAdmin = user?.isStaffAdmin || user?.isStudentAdmin || user?.accountType === 'staff'
+  const isAlumni = user?.isAlumni
+
+  // Non-alumni undergraduates see the fun gate; admins always pass through
+  if (!isAlumni && !isAdmin) return <UndergradGate />
 
   const [tab, setTab]             = useState('opportunities')
   const [opps, setOpps]           = useState([])
@@ -371,7 +528,7 @@ export default function Alumni() {
   const [oppsLoading, setOL]      = useState(false)
   const [profileLoading, setPL]   = useState(false)
 
-  const [oppType, setOppType]   = useState('all')
+  const [oppType, setOppType]     = useState('all')
   const [oppSearch, setOppSearch] = useState('')
   const [expandedOpp, setExpandedOpp] = useState(null)
 
@@ -379,8 +536,8 @@ export default function Alumni() {
   const [postingOpp, setPostingOpp]         = useState(false)
   const [editingOpp, setEditingOpp]         = useState(null)
   const [mentorProfile, setMentorProfile]   = useState(null)
+  const [viewProfileId, setViewProfileId]   = useState(null)
 
-  // Load opportunities
   useEffect(() => {
     if (tab !== 'opportunities') return
     setOL(true)
@@ -393,7 +550,6 @@ export default function Alumni() {
       .finally(() => setOL(false))
   }, [tab, oppType, oppSearch])
 
-  // Load my profile
   useEffect(() => {
     if (tab !== 'my-profile') return
     setPL(true)
@@ -403,7 +559,6 @@ export default function Alumni() {
       .finally(() => setPL(false))
   }, [tab])
 
-  // Load pending
   useEffect(() => {
     if (tab !== 'pending' || !isAdmin) return
     axios.get('/api/alumni/admin/pending').then(r => setPending(r.data)).catch(() => {})
@@ -437,6 +592,17 @@ export default function Alumni() {
   ]
 
   // ── Sub-views ─────────────────────────────────────────────────────────────
+  if (viewProfileId) return (
+    <>
+      {mentorProfile && <MentorshipModal profile={mentorProfile} onClose={() => setMentorProfile(null)} />}
+      <ProfileDetail
+        profileId={viewProfileId}
+        currentUserId={user?._id}
+        onBack={() => setViewProfileId(null)}
+        onMentorship={p => setMentorProfile(p)}
+      />
+    </>
+  )
   if (editingProfile && myProfile) return (
     <ProfileForm profile={myProfile} userAvatar={user?.avatar}
       onSaved={p => { setMyProfile(p); setEditingProfile(false) }}
@@ -495,11 +661,12 @@ export default function Alumni() {
               ? <div className="text-center py-20">
                   <Briefcase size={32} className="text-gray-300 mx-auto mb-3" />
                   <p className="text-gray-500 font-semibold">No opportunities yet</p>
-                  {user?.isAlumni && <p className="text-gray-400 text-sm mt-1">Go to My Profile to post one</p>}
+                  {isAlumni && <p className="text-gray-400 text-sm mt-1">Go to My Profile to post one</p>}
                 </div>
               : opps.map(o => {
                   const open = expandedOpp === o._id
                   const expired = o.deadline && new Date(o.deadline) < new Date()
+                  const posterProfileId = o.alumniProfile?._id
                   return (
                     <div key={o._id} className={`bg-white rounded-2xl border transition ${expired ? 'border-gray-200 opacity-70' : 'border-gray-200 hover:border-[#1a3c5e]/30 hover:shadow-sm'}`}>
                       <div className="p-4">
@@ -513,10 +680,16 @@ export default function Alumni() {
                               {expired && <span className="text-[10px] font-bold text-red-500 bg-red-50 px-2 py-0.5 rounded-full">Expired</span>}
                             </div>
                             <p className="text-gray-800 font-bold">{o.title}</p>
-                            <p className="text-gray-500 text-xs mt-0.5">{o.company || o.alumniProfile?.currentCompany || ''}</p>
+                            <p className="text-gray-500 text-xs mt-0.5">{o.company || ''}</p>
                             <div className="flex items-center gap-3 mt-1.5 text-gray-400 text-xs flex-wrap">
                               {o.deadline && <span className="flex items-center gap-1"><Calendar size={10} /> {expired ? 'Closed' : `Deadline: ${new Date(o.deadline).toLocaleDateString()}`}</span>}
-                              {o.alumniProfile && <span className="flex items-center gap-1"><User size={10} /> {o.alumniProfile.fullName}</span>}
+                              {o.alumniProfile && (
+                                <button
+                                  onClick={() => posterProfileId && setViewProfileId(posterProfileId)}
+                                  className="flex items-center gap-1 hover:text-[#1a3c5e] transition font-medium">
+                                  <User size={10} /> {o.alumniProfile.fullName}
+                                </button>
+                              )}
                             </div>
                           </div>
                           <button onClick={() => setExpandedOpp(open ? null : o._id)} className="p-1.5 text-gray-400 flex-shrink-0">
@@ -553,12 +726,20 @@ export default function Alumni() {
                               </a>}
                             </div>
 
-                            {/* Mentorship CTA if poster is mentoring */}
-                            {o.alumniProfile?.openToMentorship && o.alumniProfile?.user?.toString() !== user?._id && (
-                              <button onClick={() => setMentorProfile(o.alumniProfile)}
-                                className="flex items-center gap-1.5 text-xs text-[#1a3c5e] font-semibold hover:underline">
-                                <BookOpen size={11} /> Request mentorship from {o.alumniProfile.fullName?.split(' ')[0]}
-                              </button>
+                            {/* View poster profile + mentorship */}
+                            {posterProfileId && (
+                              <div className="flex items-center gap-3 pt-1">
+                                <button onClick={() => setViewProfileId(posterProfileId)}
+                                  className="flex items-center gap-1.5 text-xs text-[#1a3c5e] font-semibold hover:underline">
+                                  <User size={11} /> View {o.alumniProfile?.fullName?.split(' ')[0]}'s profile
+                                </button>
+                                {o.alumniProfile?.openToMentorship && o.alumniProfile?.user?.toString() !== user?._id && (
+                                  <button onClick={() => setMentorProfile(o.alumniProfile)}
+                                    className="flex items-center gap-1.5 text-xs text-green-600 font-semibold hover:underline">
+                                    <BookOpen size={11} /> Request mentorship
+                                  </button>
+                                )}
+                              </div>
                             )}
                           </div>
                         )}
@@ -575,15 +756,14 @@ export default function Alumni() {
         <div className="space-y-5">
           {profileLoading
             ? <div className="flex justify-center py-16"><Loader2 size={22} className="animate-spin text-[#1a3c5e]" /></div>
-            : !user?.isAlumni
+            : !isAlumni
               ? <div className="text-center py-16">
                   <User size={32} className="text-gray-300 mx-auto mb-3" />
-                  <p className="text-gray-600 font-semibold">Alumni only</p>
-                  <p className="text-gray-400 text-sm mt-1">Your alumni profile will appear here automatically once you graduate.</p>
+                  <p className="text-gray-600 font-semibold">Admin view</p>
+                  <p className="text-gray-400 text-sm mt-1">Alumni profiles are created automatically when students graduate.</p>
                 </div>
               : myProfile
                 ? <>
-                    {/* Profile card */}
                     <div className="bg-white rounded-2xl border border-gray-200 p-5">
                       <div className="flex items-start gap-4">
                         <Avatar name={myProfile.fullName} src={myProfile.avatar || user?.avatar} size={14} />
@@ -616,7 +796,6 @@ export default function Alumni() {
                         </div>
                       )}
 
-                      {/* Contact links */}
                       {Object.values(myProfile.contact || {}).some(Boolean) && (
                         <div className="mt-4 pt-4 border-t border-gray-100 flex flex-wrap gap-3">
                           {myProfile.contact?.email && <a href={`mailto:${myProfile.contact.email}`} className="flex items-center gap-1 text-xs text-blue-600 hover:underline"><Mail size={11} /> Email</a>}
@@ -627,15 +806,13 @@ export default function Alumni() {
                         </div>
                       )}
 
-                      {/* Prompt to complete if mostly empty */}
                       {!myProfile.currentRole && !myProfile.bio && (
                         <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-xl">
-                          <p className="text-blue-700 text-xs font-semibold">Your profile was auto-created from your account. Tap Edit to complete it with your current role, bio, and contact info.</p>
+                          <p className="text-blue-700 text-xs font-semibold">Your profile was auto-created. Tap Edit to complete it with your current role, bio, and contact info.</p>
                         </div>
                       )}
                     </div>
 
-                    {/* My opportunities */}
                     <div>
                       <div className="flex items-center justify-between mb-3">
                         <p className="text-gray-700 font-bold">My Posted Opportunities</p>
@@ -670,9 +847,7 @@ export default function Alumni() {
                       }
                     </div>
                   </>
-                : <div className="text-center py-16">
-                    <Loader2 size={22} className="animate-spin text-[#1a3c5e] mx-auto" />
-                  </div>
+                : <div className="flex justify-center py-16"><Loader2 size={22} className="animate-spin text-[#1a3c5e]" /></div>
           }
         </div>
       )}
