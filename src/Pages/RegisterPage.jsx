@@ -64,7 +64,7 @@ export default function RegisterPage() {
           </h1>
           <p className="text-blue-200 text-lg">Access past questions, resources, CBT, forums, and the tech community.</p>
         </div>
-        <p className="relative text-blue-400 text-sm">© 2025 AMACOS. Adeleke University.</p>
+        <p className="relative text-blue-400 text-sm">© 2026 AMACOS. Adeleke University.</p>
       </div>
 
       {/* Right panel */}

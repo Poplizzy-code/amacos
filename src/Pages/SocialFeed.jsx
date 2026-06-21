@@ -1653,7 +1653,7 @@ export default function SocialFeed({ topOffset = 'top-0', hideHeader = false }) 
   const [fetchError, setFetchError] = useState(false)
   const [hasMore, setHasMore] = useState(false)
   const [loadingMore, setLoadingMore] = useState(false)
-  const [tab, setTab] = useState('all')
+  const [tab] = useState('all')
   const [cameraOpen, setCameraOpen] = useState(false)
   const [dmOpen, setDmOpen] = useState(false)
   const [commentPost, setCommentPost] = useState(null)
@@ -1761,15 +1761,8 @@ export default function SocialFeed({ topOffset = 'top-0', hideHeader = false }) 
               </button>
             )}
           </div>
-          <div className="px-4 flex gap-6 mt-1 max-w-2xl mx-auto">
-            {[['all', 'For You'], ['amacos', 'AMACOS Only']].map(([val, label]) => (
-              <button key={val} onClick={() => setTab(val)}
-                className={`text-sm font-bold pb-2.5 border-b-2 transition-all ${
-                  tab === val ? 'text-white border-white' : 'text-gray-600 border-transparent hover:text-gray-400'
-                }`}>
-                {label}
-              </button>
-            ))}
+          <div className="px-4 pb-2.5 max-w-2xl mx-auto">
+            <p className="text-white font-bold text-sm">For You</p>
           </div>
         </div>
       )}
