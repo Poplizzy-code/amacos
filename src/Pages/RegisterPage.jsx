@@ -42,7 +42,7 @@ export default function RegisterPage() {
           backgroundPosition: 'center',
         }}>
         {/* Dark overlay */}
-        <div className="absolute inset-0" style={{ background: 'linear-gradient(145deg, rgba(6,13,26,0.80) 0%, rgba(13,33,55,0.72) 50%, rgba(10,25,46,0.78) 100%)' }} />
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(145deg, rgba(6,13,26,0.55) 0%, rgba(13,33,55,0.45) 50%, rgba(10,25,46,0.50) 100%)' }} />
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute bottom-0 left-0 w-80 h-80 rounded-full opacity-20"
             style={{ background: 'radial-gradient(circle, #fbbf24 0%, transparent 70%)', transform: 'translate(-30%, 30%)' }} />
