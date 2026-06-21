@@ -4,9 +4,9 @@ import toast from 'react-hot-toast'
 import { useAuth } from '../context/AuthContext'
 import {
   Users, Briefcase, User, Plus, Search, Loader2, X, Check,
-  ChevronDown, ChevronUp, ExternalLink, Mail, Phone, Linkedin,
+  ChevronDown, ChevronUp, ExternalLink, Mail, Phone,
   MapPin, Calendar, Edit2, Save, Trash2, ArrowLeft, Send,
-  BookOpen, Star, CheckCircle2, AlertCircle, Globe,
+  BookOpen, Star, CheckCircle2, AlertCircle,
 } from 'lucide-react'
 
 const FIELDS = [
@@ -571,7 +571,7 @@ export default function Alumni() {
                       <div className="mt-3 pt-3 border-t border-gray-100 flex items-center gap-2 flex-wrap">
                         {p.contact?.email && <a href={`mailto:${p.contact.email}`} className="flex items-center gap-1 text-xs text-blue-600 hover:underline"><Mail size={11} /> Email</a>}
                         {p.contact?.whatsapp && <a href={`https://wa.me/${p.contact.whatsapp.replace(/\D/g,'')}`} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-xs text-green-600 hover:underline"><Phone size={11} /> WhatsApp</a>}
-                        {p.contact?.linkedin && <a href={p.contact.linkedin} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-xs text-blue-500 hover:underline"><Linkedin size={11} /> LinkedIn</a>}
+                        {p.contact?.linkedin && <a href={p.contact.linkedin} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-xs text-blue-500 hover:underline"><ExternalLink size={11} /> LinkedIn</a>}
                         {p.contact?.twitter && <a href={`https://twitter.com/${p.contact.twitter.replace('@','')}`} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-xs text-sky-500 hover:underline"><ExternalLink size={11} /> Twitter</a>}
                         {p.openToMentorship && p.user && p.user.toString() !== user?._id && (
                           <button onClick={() => setMentorProfile(p)}
