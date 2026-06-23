@@ -3,6 +3,13 @@ import axios from 'axios'
 import { useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { X, Send, Loader2, ChevronDown, Mic, MicOff, Paperclip } from 'lucide-react'
+import * as pdfjsLib from 'pdfjs-dist'
+
+// Point PDF.js worker at the bundled worker file
+pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+  'pdfjs-dist/build/pdf.worker.mjs',
+  import.meta.url
+).href
 
 // ── Buddy face ────────────────────────────────────────────────────────────────
 function BuddyFace({ mood = 'happy', size = 48, blink = false }) {
@@ -45,7 +52,6 @@ function BuddyFace({ mood = 'happy', size = 48, blink = false }) {
     top: mouthY * 0.95,
     transform: 'translateX(-50%)',
   } : {
-    // thinking / neutral — straight line
     position: 'absolute',
     width: mouthW * 0.8,
     height: 0,
@@ -61,13 +67,10 @@ function BuddyFace({ mood = 'happy', size = 48, blink = false }) {
       background: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)',
       boxShadow: '0 4px 14px rgba(251,191,36,0.45)',
     }}>
-      {/* Cheek blush */}
       <div style={{ position: 'absolute', width: s * 0.18, height: s * 0.1, background: 'rgba(239,68,68,0.18)', borderRadius: '50%', top: eyeY + eyeSize * 1.8, left: s * 0.07 }} />
       <div style={{ position: 'absolute', width: s * 0.18, height: s * 0.1, background: 'rgba(239,68,68,0.18)', borderRadius: '50%', top: eyeY + eyeSize * 1.8, right: s * 0.07 }} />
-      {/* Eyes */}
       <div style={{ ...eyeStyle, left: s / 2 - eyeOffX - eyeSize / 2 }} />
       <div style={{ ...eyeStyle, left: s / 2 + eyeOffX - eyeSize / 2 }} />
-      {/* Mouth */}
       <div style={mouthStyle} />
     </div>
   )
@@ -75,29 +78,26 @@ function BuddyFace({ mood = 'happy', size = 48, blink = false }) {
 
 // ── Nudge triggers ────────────────────────────────────────────────────────────
 const PAGE_LABELS = {
-  '/app/explore':       'the feed',
-  '/app/dashboard':     'the dashboard',
-  '/app/resources':     'resources',
-  '/app/cbt':           'CBT',
-  '/app/past-questions':'past questions',
-  '/app/assignments':   'assignments',
-  '/app/alumni':        'the alumni network',
-  '/app/communities':   'communities',
-  '/app/lets-talk':     "Let's Talk",
-  '/app/elections':     'elections',
+  '/app/explore':        'the feed',
+  '/app/dashboard':      'the dashboard',
+  '/app/resources':      'resources',
+  '/app/cbt':            'CBT',
+  '/app/past-questions': 'past questions',
+  '/app/assignments':    'assignments',
+  '/app/alumni':         'the alumni network',
+  '/app/communities':    'communities',
+  '/app/lets-talk':      "Let's Talk",
+  '/app/elections':      'elections',
 }
 
 const STUDY_PAGES = ['/app/resources', '/app/cbt', '/app/past-questions', '/app/assignments']
 
 function getNudge(pathname, minutesOnFeed, hour, userName) {
   const name = userName?.split(' ')[0] || 'boss'
-
-  if (hour >= 0 && hour < 4) {
+  if (hour >= 0 && hour < 4)
     return { text: `${name} 😭 it's ${hour === 0 ? 'midnight' : `${hour}am`}! Close this app and sleep abeg. Your brain needs rest o.`, mood: 'concerned' }
-  }
-  if (pathname === '/app/explore' && minutesOnFeed >= 12) {
+  if (pathname === '/app/explore' && minutesOnFeed >= 12)
     return { text: `Oga ${name}, you've been scrolling for ${minutesOnFeed} minutes 😅 The feed will still be here. Go check your resources abeg!`, mood: 'thinking' }
-  }
   if (STUDY_PAGES.includes(pathname)) {
     const lines = [
       `See you being serious! 🔥 That's the energy, ${name}.`,
@@ -107,6 +107,22 @@ function getNudge(pathname, minutesOnFeed, hour, userName) {
     return { text: lines[Math.floor(Math.random() * lines.length)], mood: 'excited' }
   }
   return null
+}
+
+// ── PDF text extractor ────────────────────────────────────────────────────────
+async function extractPdfText(arrayBuffer) {
+  try {
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise
+    const pages = []
+    for (let i = 1; i <= Math.min(pdf.numPages, 20); i++) {
+      const page = await pdf.getPage(i)
+      const tc = await page.getTextContent()
+      pages.push(tc.items.map(item => item.str).join(' '))
+    }
+    return pages.join('\n')
+  } catch {
+    return null
+  }
 }
 
 // ── Main widget ───────────────────────────────────────────────────────────────
@@ -127,9 +143,10 @@ export default function BuddyWidget() {
   const [unread, setUnread] = useState(0)
 
   const [listening, setListening] = useState(false)
-  const [attachedFile, setAttachedFile] = useState(null) // { name, content }
+  const [attachedFile, setAttachedFile] = useState(null) // { name, content, type }
+  const [fileLoading, setFileLoading] = useState(false)
   const fileRef = useRef()
-  // Drag position — stored as { bottom, right } offsets
+
   const [pos, setPos] = useState(() => {
     try { return JSON.parse(localStorage.getItem('buddy_pos')) || { bottom: 80, right: 12 } }
     catch { return { bottom: 80, right: 12 } }
@@ -137,7 +154,6 @@ export default function BuddyWidget() {
   const dragging = useRef(false)
   const dragStart = useRef({})
   const widgetRef = useRef()
-
   const feedMinutes = useRef(0)
   const feedTimer = useRef(null)
   const nudgeFired = useRef({})
@@ -186,12 +202,8 @@ export default function BuddyWidget() {
   // ── Voice input ───────────────────────────────────────────────────────────
   const toggleVoice = () => {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition
-    if (!SR) return toast?.error?.('Voice not supported on this browser')
-    if (listening) {
-      recognitionRef.current?.stop()
-      setListening(false)
-      return
-    }
+    if (!SR) return
+    if (listening) { recognitionRef.current?.stop(); setListening(false); return }
     const rec = new SR()
     rec.lang = 'en-NG'
     rec.continuous = false
@@ -207,7 +219,88 @@ export default function BuddyWidget() {
     setListening(true)
   }
 
-  // Blink every 4-6s
+  // ── File attachment — all types, with PDF text extraction ──────────────────
+  const handleFileAttach = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    e.target.value = ''
+    setFileLoading(true)
+
+    try {
+      const isPdf = file.type === 'application/pdf' || file.name.endsWith('.pdf')
+      const isImage = file.type.startsWith('image/')
+      const isText = file.type.startsWith('text/') || /\.(txt|md|csv|json|js|ts|jsx|tsx|py|html|css)$/i.test(file.name)
+
+      if (isPdf) {
+        const buf = await file.arrayBuffer()
+        const text = await extractPdfText(buf)
+        if (text && text.trim().length > 20) {
+          setAttachedFile({ name: file.name, content: text, type: 'pdf' })
+        } else {
+          setAttachedFile({ name: file.name, content: `[PDF: ${file.name} — could not extract text. Student has attached this PDF.]`, type: 'pdf-unreadable' })
+        }
+      } else if (isImage) {
+        // Send image name as context; Buddy acknowledges without vision
+        setAttachedFile({ name: file.name, content: `[Image file: ${file.name}. Student has attached an image to their message.]`, type: 'image' })
+      } else if (isText) {
+        const text = await file.text()
+        setAttachedFile({ name: file.name, content: text, type: 'text' })
+      } else {
+        // Binary or unknown — just mention the file name
+        setAttachedFile({ name: file.name, content: `[File attachment: ${file.name} (${(file.size / 1024).toFixed(1)} KB). Student attached this file.]`, type: 'other' })
+      }
+    } catch {
+      setAttachedFile({ name: file.name, content: `[File: ${file.name}]`, type: 'other' })
+    } finally {
+      setFileLoading(false)
+    }
+  }
+
+  // ── Send message — auto-lookup platform resources ─────────────────────────
+  const send = async () => {
+    const text = input.trim()
+    if ((!text && !attachedFile) || loading) return
+    setInput('')
+
+    const displayText = attachedFile
+      ? `📎 ${attachedFile.name}${text ? `\n${text}` : ''}`
+      : text
+    const newMessages = [...messages, { role: 'user', text: displayText }]
+    setMessages(newMessages)
+    const fileToSend = attachedFile
+    setAttachedFile(null)
+    setLoading(true)
+    setMood('thinking')
+
+    try {
+      // Search platform resources in parallel with any network delay
+      let platformContext = ''
+      if (text) {
+        try {
+          const { data: lookup } = await axios.get('/api/buddy/lookup', { params: { q: text } })
+          platformContext = lookup.context || ''
+        } catch { /* non-fatal */ }
+      }
+
+      const { data } = await axios.post('/api/buddy/chat', {
+        message: text,
+        context: { page: location.pathname, timeOnPage: feedMinutes.current, hour: new Date().getHours() },
+        history: newMessages.slice(-10).map(m => ({ role: m.role, text: m.text })),
+        fileContent: fileToSend?.content || null,
+        fileName: fileToSend?.name || null,
+        platformContext,
+      })
+      setMessages(p => [...p, { role: 'buddy', text: data.reply }])
+      setMood('happy')
+    } catch {
+      setMessages(p => [...p, { role: 'buddy', text: "Abeg my signal cut 😅 try again?" }])
+      setMood('happy')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // ── Blink ─────────────────────────────────────────────────────────────────
   useEffect(() => {
     const blinker = setInterval(() => {
       setBlink(true)
@@ -216,7 +309,7 @@ export default function BuddyWidget() {
     return () => clearInterval(blinker)
   }, [])
 
-  // Track feed time
+  // ── Feed timer ────────────────────────────────────────────────────────────
   useEffect(() => {
     if (location.pathname === '/app/explore') {
       feedTimer.current = setInterval(() => { feedMinutes.current += 1 }, 60000)
@@ -227,7 +320,7 @@ export default function BuddyWidget() {
     return () => clearInterval(feedTimer.current)
   }, [location.pathname])
 
-  // Study page encouragement (fire once per page visit)
+  // ── Study page nudge ──────────────────────────────────────────────────────
   useEffect(() => {
     const key = location.pathname
     if (STUDY_PAGES.includes(key) && !nudgeFired.current[key]) {
@@ -239,7 +332,7 @@ export default function BuddyWidget() {
     }
   }, [location.pathname])
 
-  // Night owl check on mount
+  // ── Night owl check ───────────────────────────────────────────────────────
   useEffect(() => {
     const h = new Date().getHours()
     if ((h >= 0 && h < 4) && !nudgeFired.current['night']) {
@@ -248,7 +341,7 @@ export default function BuddyWidget() {
     }
   }, [])
 
-  // Feed scroll nudge — check every minute
+  // ── Feed scroll nudge ─────────────────────────────────────────────────────
   useEffect(() => {
     const checker = setInterval(() => {
       if (location.pathname !== '/app/explore') return
@@ -258,7 +351,7 @@ export default function BuddyWidget() {
     return () => clearInterval(checker)
   }, [location.pathname, userName])
 
-  // First visit of the day greeting
+  // ── Daily greeting ────────────────────────────────────────────────────────
   useEffect(() => {
     const today = new Date().toDateString()
     const last = localStorage.getItem('buddy_last_seen')
@@ -277,60 +370,16 @@ export default function BuddyWidget() {
     setNudge(n)
     setMood(n.mood || 'happy')
     if (!open) setUnread(c => c + 1)
-    // Add to chat history too
     setMessages(prev => [...prev, { role: 'buddy', text: n.text }])
   }, [open])
 
-  // Auto-scroll
   useEffect(() => {
     if (open) messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, open])
 
-  // Clear unread when opened
   useEffect(() => {
     if (open) { setUnread(0); setNudge(null) }
   }, [open])
-
-  const send = async () => {
-    const text = input.trim()
-    if ((!text && !attachedFile) || loading) return
-    setInput('')
-    const displayText = attachedFile
-      ? `📎 ${attachedFile.name}${text ? `\n${text}` : ''}`
-      : text
-    const newMessages = [...messages, { role: 'user', text: displayText }]
-    setMessages(newMessages)
-    const fileToSend = attachedFile
-    setAttachedFile(null)
-    setLoading(true)
-
-    try {
-      const { data } = await axios.post('/api/buddy/chat', {
-        message: text,
-        context: { page: location.pathname, timeOnPage: feedMinutes.current, hour: new Date().getHours() },
-        history: newMessages.slice(-10).map(m => ({ role: m.role, text: m.text })),
-        fileContent: fileToSend?.content || null,
-        fileName: fileToSend?.name || null,
-      })
-      setMessages(p => [...p, { role: 'buddy', text: data.reply }])
-      setMood('happy')
-    } catch {
-      setMessages(p => [...p, { role: 'buddy', text: "Abeg my signal cut 😅 try again?" }])
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleFileAttach = (e) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    const reader = new FileReader()
-    reader.onload = (ev) => {
-      setAttachedFile({ name: file.name, content: ev.target.result })
-    }
-    reader.readAsText(file)
-    e.target.value = ''
-  }
 
   if (minimised) return (
     <button onClick={() => setMinimised(false)}
@@ -346,7 +395,7 @@ export default function BuddyWidget() {
     <div ref={widgetRef} className="fixed z-50 flex flex-col items-end gap-2"
       style={{ bottom: pos.bottom, right: pos.right, pointerEvents: 'none' }}>
 
-      {/* Nudge bubble — shows when chat is closed */}
+      {/* Nudge bubble */}
       {nudge && !open && (
         <div className="flex items-end gap-2 mb-1" style={{ pointerEvents: 'auto', maxWidth: 260 }}>
           <div className="relative bg-white rounded-2xl rounded-br-none shadow-xl border border-gray-100 px-3 py-2.5">
@@ -388,7 +437,7 @@ export default function BuddyWidget() {
             {messages.map((m, i) => (
               <div key={i} className={`flex items-end gap-1.5 ${m.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
                 {m.role === 'buddy' && <BuddyFace size={22} mood="happy" />}
-                <div className={`max-w-[80%] px-3 py-2 rounded-2xl text-xs leading-relaxed ${
+                <div className={`max-w-[80%] px-3 py-2 rounded-2xl text-xs leading-relaxed whitespace-pre-wrap ${
                   m.role === 'user'
                     ? 'bg-[#1a3c5e] text-white rounded-br-none'
                     : 'bg-white text-gray-700 border border-gray-100 shadow-sm rounded-bl-none'
@@ -421,10 +470,11 @@ export default function BuddyWidget() {
 
           {/* Input */}
           <div className="flex items-center gap-1.5 px-3 py-2.5 border-t border-gray-100 bg-white">
-            <input ref={fileRef} type="file" accept=".txt,.md,.pdf,.csv" className="hidden" onChange={handleFileAttach} />
-            <button onClick={() => fileRef.current?.click()}
-              className="w-7 h-7 flex items-center justify-center rounded-full flex-shrink-0 bg-gray-100 text-gray-400 hover:bg-gray-200 transition">
-              <Paperclip size={12} />
+            {/* Accept all file types */}
+            <input ref={fileRef} type="file" accept="*" className="hidden" onChange={handleFileAttach} />
+            <button onClick={() => fileRef.current?.click()} disabled={fileLoading}
+              className="w-7 h-7 flex items-center justify-center rounded-full flex-shrink-0 bg-gray-100 text-gray-400 hover:bg-gray-200 transition disabled:opacity-50">
+              {fileLoading ? <Loader2 size={12} className="animate-spin" /> : <Paperclip size={12} />}
             </button>
             <button onClick={toggleVoice}
               className={`w-7 h-7 flex items-center justify-center rounded-full flex-shrink-0 transition ${listening ? 'bg-red-500 text-white animate-pulse' : 'bg-gray-100 text-gray-400 hover:bg-gray-200'}`}>
@@ -439,7 +489,7 @@ export default function BuddyWidget() {
               style={{ fontSize: 14 }}
               className="flex-1 text-sm text-gray-700 placeholder-gray-400 focus:outline-none bg-transparent"
             />
-            <button onClick={send} disabled={loading || (!input.trim() && !attachedFile)}
+            <button onClick={send} disabled={loading || fileLoading || (!input.trim() && !attachedFile)}
               className="w-7 h-7 bg-[#1a3c5e] hover:bg-[#15324f] disabled:opacity-40 text-white rounded-full flex items-center justify-center transition flex-shrink-0">
               {loading ? <Loader2 size={12} className="animate-spin" /> : <Send size={12} />}
             </button>
