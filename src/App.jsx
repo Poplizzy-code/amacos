@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from './context/AuthContext'
 import { SocketProvider } from './context/SocketContext'
 import LoginPage from './Pages/LoginPage'
 import RegisterPage from './Pages/RegisterPage'
+import VerifyEmailPage from './Pages/VerifyEmailPage'
 import LandingPage from './Pages/LandingPage'
 import MainLayout from './Layouts/MainLayout'
 import PublicLayout from './Layouts/PublicLayout'
@@ -103,6 +104,7 @@ const AppRoutes = () => {
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={!user ? <LoginPage /> : <Navigate to="/app/dashboard" />} />
       <Route path="/register" element={!user ? <RegisterPage /> : <Navigate to="/app/dashboard" />} />
+      <Route path="/verify-email" element={<VerifyEmailPage />} />
 
       {/* Public pages with navbar — no login needed */}
       <Route element={<PublicLayout />}>

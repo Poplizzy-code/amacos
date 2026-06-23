@@ -1,14 +1,17 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import axios from 'axios'
 import toast from 'react-hot-toast'
-import { Eye, EyeOff, BookOpen } from 'lucide-react'
+import { Eye, EyeOff, BookOpen, Mail, RefreshCw } from 'lucide-react'
 
 export default function LoginPage() {
   const { login } = useAuth()
   const [form, setForm] = useState({ email: '', password: '' })
   const [showPass, setShowPass] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [unverified, setUnverified] = useState(null) // { email }
+  const [resending, setResending] = useState(false)
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value })
 
@@ -19,9 +22,27 @@ export default function LoginPage() {
       await login(form.email, form.password)
       toast.success('Welcome back!')
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Login failed.')
+      const data = err.response?.data
+      if (data?.needsVerification) {
+        setUnverified({ email: data.email || form.email })
+      } else {
+        toast.error(data?.message || 'Login failed.')
+      }
     } finally {
       setLoading(false)
+    }
+  }
+
+  const resend = async () => {
+    if (!unverified?.email) return
+    setResending(true)
+    try {
+      await axios.post('/api/auth/resend-verification', { email: unverified.email })
+      toast.success('Verification email resent! Check your inbox.')
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to resend.')
+    } finally {
+      setResending(false)
     }
   }
 
@@ -82,6 +103,23 @@ export default function LoginPage() {
         <div className="relative w-full max-w-md px-6 py-10 sm:py-12">
           <h2 className="text-2xl sm:text-3xl font-display text-[#1a3c5e] mb-1">Welcome back</h2>
           <p className="text-gray-500 mb-8 text-sm">Sign in to your AMACOS account</p>
+
+          {unverified && (
+            <div className="mb-5 bg-amber-50 border border-amber-200 rounded-xl p-4">
+              <div className="flex items-start gap-3 mb-3">
+                <Mail size={16} className="text-amber-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-amber-800 text-sm font-semibold">Email not verified</p>
+                  <p className="text-amber-700 text-xs mt-0.5">Check your inbox at <strong>{unverified.email}</strong> and click the verification link before logging in.</p>
+                </div>
+              </div>
+              <button onClick={resend} disabled={resending} type="button"
+                className="flex items-center gap-1.5 text-xs font-semibold text-amber-700 hover:text-amber-900 transition disabled:opacity-50">
+                <RefreshCw size={12} className={resending ? 'animate-spin' : ''} />
+                {resending ? 'Sending…' : 'Resend verification email'}
+              </button>
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>

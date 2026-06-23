@@ -1,16 +1,17 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
+import axios from 'axios'
 import toast from 'react-hot-toast'
-import { Eye, EyeOff, BookOpen, GraduationCap, Users, Lock } from 'lucide-react'
+import { Eye, EyeOff, BookOpen, GraduationCap, Users, Lock, Mail, RefreshCw } from 'lucide-react'
 
 export default function RegisterPage() {
-  const { register } = useAuth()
   const [accountType, setAccountType] = useState('student')
   const [form, setForm] = useState({ fullName: '', email: '', password: '', matricNumber: '', level: '100', staffCode: '' })
   const [showPass, setShowPass] = useState(false)
   const [showCode, setShowCode] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [done, setDone] = useState(null) // { email }
+  const [resending, setResending] = useState(false)
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value })
 
@@ -20,13 +21,59 @@ export default function RegisterPage() {
     if (accountType === 'staff' && !form.staffCode.trim()) return toast.error('Staff access code is required.')
     setLoading(true)
     try {
-      await register({ ...form, accountType })
-      toast.success('Account created! Welcome to AMACOS.')
+      await axios.post('/api/auth/register', { ...form, accountType })
+      setDone({ email: form.email })
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Registration failed.')
+      const data = err.response?.data
+      if (data?.needsVerification) {
+        setDone({ email: data.email })
+      } else {
+        toast.error(data?.message || 'Registration failed.')
+      }
     } finally {
       setLoading(false)
     }
+  }
+
+  const resend = async () => {
+    if (!done?.email) return
+    setResending(true)
+    try {
+      await axios.post('/api/auth/resend-verification', { email: done.email })
+      toast.success('Verification email resent!')
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to resend.')
+    } finally {
+      setResending(false)
+    }
+  }
+
+  if (done) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#f0f5fb] via-[#e8eef8] to-[#f4f8ff] px-6">
+        <div className="w-full max-w-md text-center">
+          <div className="w-20 h-20 mx-auto mb-6 bg-[#1a3c5e]/10 rounded-full flex items-center justify-center">
+            <Mail size={36} className="text-[#1a3c5e]" />
+          </div>
+          <h2 className="text-2xl font-bold text-[#1a3c5e] mb-2">Check your inbox!</h2>
+          <p className="text-gray-500 text-sm leading-relaxed mb-1">
+            We sent a verification link to
+          </p>
+          <p className="text-[#1a3c5e] font-semibold text-sm mb-5">{done.email}</p>
+          <p className="text-gray-400 text-xs mb-8">
+            Click the link in the email to activate your account. Check your spam folder if you don't see it.
+          </p>
+          <button onClick={resend} disabled={resending}
+            className="flex items-center justify-center gap-2 mx-auto text-sm text-gray-500 hover:text-[#1a3c5e] transition disabled:opacity-50">
+            <RefreshCw size={14} className={resending ? 'animate-spin' : ''} />
+            {resending ? 'Sending…' : 'Resend verification email'}
+          </button>
+          <p className="text-center text-sm text-gray-500 mt-6">
+            <Link to="/login" className="text-[#1a3c5e] font-medium hover:underline">Back to login</Link>
+          </p>
+        </div>
+      </div>
+    )
   }
 
   const isStaff = accountType === 'staff'
