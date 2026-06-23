@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import axios from 'axios'
 import { useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { X, Send, Loader2, ChevronDown, Mic, MicOff, Paperclip } from 'lucide-react'
+import { X, Send, Loader2, ChevronDown, Mic, MicOff, Paperclip, Trash2 } from 'lucide-react'
 import * as pdfjsLib from 'pdfjs-dist'
 
 // Point PDF.js worker at the bundled worker file
@@ -125,6 +125,26 @@ async function extractPdfText(arrayBuffer) {
   }
 }
 
+const MEMORY_LIMIT = 60 // max messages to persist
+const WELCOME = { role: 'buddy', text: `Hey! I'm Buddy 👋 Your AMACOS campus companion. Ask me anything or just vibe with me 😄` }
+
+function loadMessages(userId) {
+  try {
+    const saved = localStorage.getItem(`buddy_msgs_${userId}`)
+    if (saved) {
+      const parsed = JSON.parse(saved)
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed
+    }
+  } catch { /* ignore */ }
+  return [WELCOME]
+}
+
+function saveMessages(userId, msgs) {
+  try {
+    localStorage.setItem(`buddy_msgs_${userId}`, JSON.stringify(msgs.slice(-MEMORY_LIMIT)))
+  } catch { /* storage full — ignore */ }
+}
+
 // ── Main widget ───────────────────────────────────────────────────────────────
 export default function BuddyWidget() {
   const { user } = useAuth()
@@ -132,9 +152,7 @@ export default function BuddyWidget() {
 
   const [open, setOpen] = useState(false)
   const [minimised, setMinimised] = useState(false)
-  const [messages, setMessages] = useState([
-    { role: 'buddy', text: `Hey! I'm Buddy 👋 Your AMACOS campus companion. Ask me anything or just vibe with me 😄` },
-  ])
+  const [messages, setMessages] = useState(() => loadMessages(user?._id || 'guest'))
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [blink, setBlink] = useState(false)
@@ -162,6 +180,18 @@ export default function BuddyWidget() {
   const recognitionRef = useRef(null)
 
   const userName = user?.fullName?.split(' ')[0] || 'boss'
+  const storageKey = `buddy_msgs_${user?._id || 'guest'}`
+
+  // ── Persist messages to localStorage ─────────────────────────────────────
+  useEffect(() => {
+    saveMessages(user?._id || 'guest', messages)
+  }, [messages, user?._id])
+
+  const clearHistory = () => {
+    const fresh = [WELCOME]
+    setMessages(fresh)
+    try { localStorage.removeItem(storageKey) } catch { /* ignore */ }
+  }
 
   // ── Drag ──────────────────────────────────────────────────────────────────
   const onDragStart = (e) => {
@@ -422,8 +452,12 @@ export default function BuddyWidget() {
             <BuddyFace size={32} mood={mood} blink={blink} />
             <div className="flex-1 min-w-0">
               <p className="text-white font-bold text-sm leading-tight">Buddy</p>
-              <p className="text-blue-300 text-[10px]">Your AMACOS companion</p>
+              <p className="text-blue-300 text-[10px]">Your AMACOS companion · {messages.length - 1} messages</p>
             </div>
+            <button onClick={clearHistory} title="Clear chat history"
+              className="p-1 text-white/30 hover:text-red-400 transition">
+              <Trash2 size={13} />
+            </button>
             <button onClick={() => setMinimised(true)} className="p-1 text-white/40 hover:text-white/80 transition">
               <ChevronDown size={15} />
             </button>
