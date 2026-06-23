@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import axios from 'axios'
 import { useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { X, Send, Loader2, ChevronDown, Mic, MicOff } from 'lucide-react'
+import { X, Send, Loader2, ChevronDown, Mic, MicOff, Paperclip } from 'lucide-react'
 
 // ── Buddy face ────────────────────────────────────────────────────────────────
 function BuddyFace({ mood = 'happy', size = 48, blink = false }) {
@@ -127,6 +127,8 @@ export default function BuddyWidget() {
   const [unread, setUnread] = useState(0)
 
   const [listening, setListening] = useState(false)
+  const [attachedFile, setAttachedFile] = useState(null) // { name, content }
+  const fileRef = useRef()
   // Drag position — stored as { bottom, right } offsets
   const [pos, setPos] = useState(() => {
     try { return JSON.parse(localStorage.getItem('buddy_pos')) || { bottom: 80, right: 12 } }
@@ -291,21 +293,24 @@ export default function BuddyWidget() {
 
   const send = async () => {
     const text = input.trim()
-    if (!text || loading) return
+    if ((!text && !attachedFile) || loading) return
     setInput('')
-    const newMessages = [...messages, { role: 'user', text }]
+    const displayText = attachedFile
+      ? `📎 ${attachedFile.name}${text ? `\n${text}` : ''}`
+      : text
+    const newMessages = [...messages, { role: 'user', text: displayText }]
     setMessages(newMessages)
+    const fileToSend = attachedFile
+    setAttachedFile(null)
     setLoading(true)
 
     try {
       const { data } = await axios.post('/api/buddy/chat', {
         message: text,
-        context: {
-          page: location.pathname,
-          timeOnPage: feedMinutes.current,
-          hour: new Date().getHours(),
-        },
+        context: { page: location.pathname, timeOnPage: feedMinutes.current, hour: new Date().getHours() },
         history: newMessages.slice(-10).map(m => ({ role: m.role, text: m.text })),
+        fileContent: fileToSend?.content || null,
+        fileName: fileToSend?.name || null,
       })
       setMessages(p => [...p, { role: 'buddy', text: data.reply }])
       setMood('happy')
@@ -314,6 +319,17 @@ export default function BuddyWidget() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleFileAttach = (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (ev) => {
+      setAttachedFile({ name: file.name, content: ev.target.result })
+    }
+    reader.readAsText(file)
+    e.target.value = ''
   }
 
   if (minimised) return (
@@ -394,8 +410,22 @@ export default function BuddyWidget() {
             <div ref={messagesEndRef} />
           </div>
 
+          {/* File attachment preview */}
+          {attachedFile && (
+            <div className="mx-3 mb-1 flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-xl px-2.5 py-1.5">
+              <Paperclip size={11} className="text-blue-500 flex-shrink-0" />
+              <p className="text-blue-700 text-[11px] font-semibold flex-1 truncate">{attachedFile.name}</p>
+              <button onClick={() => setAttachedFile(null)} className="text-blue-400 hover:text-red-500"><X size={11} /></button>
+            </div>
+          )}
+
           {/* Input */}
           <div className="flex items-center gap-1.5 px-3 py-2.5 border-t border-gray-100 bg-white">
+            <input ref={fileRef} type="file" accept=".txt,.md,.pdf,.csv" className="hidden" onChange={handleFileAttach} />
+            <button onClick={() => fileRef.current?.click()}
+              className="w-7 h-7 flex items-center justify-center rounded-full flex-shrink-0 bg-gray-100 text-gray-400 hover:bg-gray-200 transition">
+              <Paperclip size={12} />
+            </button>
             <button onClick={toggleVoice}
               className={`w-7 h-7 flex items-center justify-center rounded-full flex-shrink-0 transition ${listening ? 'bg-red-500 text-white animate-pulse' : 'bg-gray-100 text-gray-400 hover:bg-gray-200'}`}>
               {listening ? <MicOff size={12} /> : <Mic size={12} />}
@@ -405,11 +435,11 @@ export default function BuddyWidget() {
               value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && !e.shiftKey && send()}
-              placeholder={listening ? 'Listening…' : 'Say something…'}
+              placeholder={listening ? 'Listening…' : attachedFile ? 'Add a message…' : 'Say something…'}
               style={{ fontSize: 14 }}
               className="flex-1 text-sm text-gray-700 placeholder-gray-400 focus:outline-none bg-transparent"
             />
-            <button onClick={send} disabled={loading || !input.trim()}
+            <button onClick={send} disabled={loading || (!input.trim() && !attachedFile)}
               className="w-7 h-7 bg-[#1a3c5e] hover:bg-[#15324f] disabled:opacity-40 text-white rounded-full flex items-center justify-center transition flex-shrink-0">
               {loading ? <Loader2 size={12} className="animate-spin" /> : <Send size={12} />}
             </button>
