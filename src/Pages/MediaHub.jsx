@@ -418,7 +418,7 @@ export default function MediaHub({ isApp = false }) {
   return (
     <div className={isApp ? 'relative -m-4 lg:-m-6 min-h-full bg-[#060d1a]' : 'min-h-screen bg-[#060d1a]'}>
       {/* Header */}
-      <div className="sticky top-0 z-30 bg-[#060d1a] border-b border-white/10">
+      <div className="sticky top-0 z-30 bg-transparent backdrop-blur-xl border-b border-white/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           {/* Top bar with branding + actions */}
           <div className="flex items-center justify-between py-3 gap-3">
