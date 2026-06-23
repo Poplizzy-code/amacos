@@ -22,7 +22,6 @@ export default function RegisterPage() {
     try {
       await register({ ...form, accountType })
       toast.success('Account created! Welcome to AMACOS.')
-      // route guard in App.jsx handles the redirect once user state updates
     } catch (err) {
       toast.error(err.response?.data?.message || 'Registration failed.')
     } finally {
@@ -33,77 +32,71 @@ export default function RegisterPage() {
   const isStaff = accountType === 'staff'
 
   return (
-    <div className="min-h-screen flex">
-      {/* Left panel */}
-      <div className="hidden lg:flex w-1/2 flex-col justify-between p-12 text-white relative overflow-hidden"
+    <div className="min-h-screen flex flex-col lg:flex-row">
+
+      {/* Hero panel — full width on mobile (compact), half on desktop */}
+      <div className="relative lg:w-1/2 flex-shrink-0 flex flex-col justify-between text-white overflow-hidden"
         style={{
           backgroundImage: 'url(/bg-signup.png)',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
+          minHeight: '200px',
         }}>
-        {/* Dark overlay */}
-        <div className="absolute inset-0" style={{ background: 'linear-gradient(145deg, rgba(6,13,26,0.55) 0%, rgba(13,33,55,0.45) 50%, rgba(10,25,46,0.50) 100%)' }} />
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(145deg, rgba(6,13,26,0.65) 0%, rgba(13,33,55,0.55) 50%, rgba(10,25,46,0.60) 100%)' }} />
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute bottom-0 left-0 w-80 h-80 rounded-full opacity-20"
             style={{ background: 'radial-gradient(circle, #fbbf24 0%, transparent 70%)', transform: 'translate(-30%, 30%)' }} />
         </div>
-        <div className="relative flex items-center gap-3">
-          <div className="w-10 h-10 bg-amber-400 rounded-xl flex items-center justify-center shadow-lg">
-            <BookOpen size={20} className="text-[#1a3c5e]" />
+
+        {/* Logo row */}
+        <div className="relative flex items-center gap-3 p-6 lg:p-12">
+          <div className="w-9 h-9 lg:w-10 lg:h-10 bg-amber-400 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0">
+            <BookOpen size={18} className="text-[#1a3c5e]" />
           </div>
-          <span className="text-xl font-semibold tracking-wide">AMACOS</span>
+          <span className="text-lg lg:text-xl font-semibold tracking-wide">AMACOS</span>
         </div>
-        <div className="relative">
-          <div className="inline-flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-full mb-5">
+
+        {/* Hero copy — hidden on very small mobile, shown from sm up */}
+        <div className="relative px-6 pb-6 lg:px-12 lg:pb-12 hidden sm:block">
+          <div className="inline-flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-full mb-4">
             <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
             <span className="text-blue-200 text-xs font-medium">Join hundreds of Mass Comm students</span>
           </div>
-          <h1 className="text-5xl font-display leading-tight mb-4">
+          <h1 className="text-3xl lg:text-5xl font-display leading-tight mb-3">
             Join the<br />
             <span className="text-amber-400">AMACOS Community</span>
           </h1>
-          <p className="text-blue-200 text-lg">Access past questions, resources, CBT, forums, and the tech community.</p>
+          <p className="text-blue-200 text-sm lg:text-lg">Access past questions, resources, CBT, forums, and the tech community.</p>
         </div>
-        <p className="relative text-blue-400 text-sm">© 2026 AMACOS. Adeleke University.</p>
-        <p className="relative text-blue-600/60 text-xs mt-1">Built by Bukunmi · Flamedev Studio · NEXUS Team 2026/2027</p>
+
+        {/* Credits — desktop only */}
+        <div className="relative px-12 pb-6 hidden lg:block">
+          <p className="text-blue-400 text-sm">© 2026 AMACOS. Adeleke University.</p>
+          <p className="text-blue-600/60 text-xs mt-1">Built by Bukunmi · Flamedev Studio · NEXUS Team 2026/2027</p>
+        </div>
       </div>
 
-      {/* Right panel */}
-      <div className="flex-1 flex items-center justify-center px-6 py-12 overflow-y-auto relative"
-        style={{ background: 'linear-gradient(145deg, #f0f5fb 0%, #e8eef8 50%, #f4f8ff 100%)' }}>
+      {/* Form panel */}
+      <div className="flex-1 flex items-center justify-center relative overflow-hidden bg-gradient-to-br from-[#f0f5fb] via-[#e8eef8] to-[#f4f8ff]">
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute -top-32 -right-32 w-96 h-96 rounded-full opacity-40"
+          <div className="absolute -top-32 -right-32 w-96 h-96 rounded-full opacity-30"
             style={{ background: 'radial-gradient(circle, #dbeafe 0%, transparent 70%)' }} />
-          <div className="absolute -bottom-24 -left-24 w-80 h-80 rounded-full opacity-30"
+          <div className="absolute -bottom-24 -left-24 w-80 h-80 rounded-full opacity-20"
             style={{ background: 'radial-gradient(circle, #bfdbfe 0%, transparent 70%)' }} />
         </div>
-        <div className="w-full max-w-md">
-          <div className="lg:hidden flex items-center gap-2 mb-8">
-            <BookOpen size={22} className="text-[#1a3c5e]" />
-            <span className="font-semibold text-[#1a3c5e] text-lg">AMACOS</span>
-          </div>
 
-          <h2 className="text-3xl font-display text-[#1a3c5e] mb-1">Create account</h2>
-          <p className="text-gray-500 mb-6 text-sm">Join the Mass Communication platform</p>
+        <div className="relative w-full max-w-md px-6 py-8 sm:py-12">
+          <h2 className="text-2xl sm:text-3xl font-display text-[#1a3c5e] mb-1">Create account</h2>
+          <p className="text-gray-500 mb-5 text-sm">Join the Mass Communication platform</p>
 
           {/* Account type toggle */}
-          <div className="flex gap-2 mb-6 p-1 bg-gray-100 rounded-xl">
-            <button
-              type="button"
-              onClick={() => setAccountType('student')}
-              className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                !isStaff ? 'bg-white text-[#1a3c5e] shadow-sm' : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
+          <div className="flex gap-2 mb-5 p-1 bg-gray-100 rounded-xl">
+            <button type="button" onClick={() => setAccountType('student')}
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all ${!isStaff ? 'bg-white text-[#1a3c5e] shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
               <GraduationCap size={16} /> I am a Student
             </button>
-            <button
-              type="button"
-              onClick={() => setAccountType('staff')}
-              className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                isStaff ? 'bg-white text-[#1a3c5e] shadow-sm' : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
+            <button type="button" onClick={() => setAccountType('staff')}
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all ${isStaff ? 'bg-white text-[#1a3c5e] shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
               <Users size={16} /> I am Staff
             </button>
           </div>
@@ -120,6 +113,7 @@ export default function RegisterPage() {
               <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
               <input type="text" name="fullName" value={form.fullName} onChange={handleChange} required
                 placeholder="e.g. Adebayo Tunde"
+                style={{ fontSize: 16 }}
                 className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3c5e] transition" />
             </div>
 
@@ -127,6 +121,7 @@ export default function RegisterPage() {
               <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
               <input type="email" name="email" value={form.email} onChange={handleChange} required
                 placeholder="you@adelekeuniversity.edu.ng"
+                style={{ fontSize: 16 }}
                 className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3c5e] transition" />
             </div>
 
@@ -136,11 +131,13 @@ export default function RegisterPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">Matric Number</label>
                   <input type="text" name="matricNumber" value={form.matricNumber} onChange={handleChange}
                     placeholder="AUI/..."
+                    style={{ fontSize: 16 }}
                     className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3c5e] transition" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Level</label>
                   <select name="level" value={form.level} onChange={handleChange}
+                    style={{ fontSize: 16 }}
                     className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3c5e] transition bg-white">
                     <option value="100">100L</option>
                     <option value="200">200L</option>
@@ -157,6 +154,7 @@ export default function RegisterPage() {
                 <div className="relative">
                   <input type={showCode ? 'text' : 'password'} name="staffCode" value={form.staffCode}
                     onChange={handleChange} placeholder="Enter staff verification code"
+                    style={{ fontSize: 16 }}
                     className="w-full px-4 py-3 border border-amber-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 transition pr-12" />
                   <button type="button" onClick={() => setShowCode(!showCode)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
@@ -171,6 +169,7 @@ export default function RegisterPage() {
               <div className="relative">
                 <input type={showPass ? 'text' : 'password'} name="password" value={form.password}
                   onChange={handleChange} required placeholder="Min. 6 characters"
+                  style={{ fontSize: 16 }}
                   className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3c5e] transition pr-12" />
                 <button type="button" onClick={() => setShowPass(!showPass)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
@@ -185,10 +184,12 @@ export default function RegisterPage() {
             </button>
           </form>
 
-          <p className="text-center text-sm text-gray-500 mt-6">
+          <p className="text-center text-sm text-gray-500 mt-5">
             Already have an account?{' '}
             <Link to="/login" className="text-[#1a3c5e] font-medium hover:underline">Sign in</Link>
           </p>
+
+          <p className="text-center text-gray-300 text-[10px] mt-6">Built by Bukunmi · Flamedev Studio · NEXUS Team 2026/2027</p>
         </div>
       </div>
     </div>

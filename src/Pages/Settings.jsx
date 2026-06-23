@@ -583,6 +583,7 @@ function BankSettingsCard() {
 // ── Main ───────────────────────────────────────────────────────────────────────
 export default function Settings() {
   const { user, setUser } = useAuth()
+  const isAdmin = user?.isStaffAdmin || user?.isStudentAdmin || user?.accountType === 'staff'
 
   const tabs = [
     { id: 'profile', label: 'Profile' },

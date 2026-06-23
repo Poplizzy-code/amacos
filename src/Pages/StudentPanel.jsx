@@ -866,7 +866,7 @@ function MediaRolesTab({ canAssignChief = false }) {
   const setRole = async (userId, role) => {
     setActionLoading(userId)
     try {
-      await axios.put(`/api/media/roles/${userId}`, { role }, { withCredentials: true })
+      await axios.put(`/api/media/roles/${userId}`, { mediaRole: role }, { withCredentials: true })
       setUsers(prev => prev.map(u => u._id === userId ? { ...u, mediaRole: role } : u))
       toast.success(`Role ${role ? `set to ${role}` : 'removed'}.`)
     } catch (err) { toast.error(err.response?.data?.message || 'Failed.') }
