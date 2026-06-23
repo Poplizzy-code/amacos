@@ -43,6 +43,7 @@ import Elections from './Pages/Elections'
 import ElectionDetail from './Pages/ElectionDetail'
 import Communities from './Pages/Communities'
 import CommunityDetail from './Pages/CommunityDetail'
+import Wallet from './Pages/Wallet'
 
 const Spinner = () => (
   <div className="flex items-center justify-center h-screen bg-[#f8fafc]">
@@ -146,6 +147,7 @@ const AppRoutes = () => {
         <Route path="groups" element={<Groups />} />
         <Route path="messages" element={<Messages />} />
         <Route path="notifications" element={<Notifications />} />
+        <Route path="wallet" element={<Wallet />} />
         <Route path="admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
         <Route path="student-panel" element={<StudentAdminRoute><StudentPanel /></StudentAdminRoute>} />
         <Route path="media" element={<MediaHub isApp />} />

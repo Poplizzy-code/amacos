@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext'
 import {
   User, Lock, Eye, EyeOff, Copy, Check, Pencil, X,
   ShieldCheck, ShieldOff, GraduationCap, UserCheck,
-  UserX, KeyRound, RefreshCw, Loader2, Camera,
+  UserX, KeyRound, RefreshCw, Loader2, Camera, Building2,
 } from 'lucide-react'
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
@@ -516,6 +516,70 @@ function StudentSettingsTab() {
   )
 }
 
+// ── Bank / Payment settings (admin only) ──────────────────────────────────────
+function BankSettingsCard() {
+  const [form, setForm] = useState({ bankName: '', bankAccountNumber: '', bankAccountName: '' })
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    axios.get('/api/credits/bank-info')
+      .then(r => setForm({
+        bankName: r.data.bankName || '',
+        bankAccountNumber: r.data.bankAccountNumber || '',
+        bankAccountName: r.data.bankAccountName || '',
+      }))
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [])
+
+  const save = async () => {
+    if (!form.bankName || !form.bankAccountNumber || !form.bankAccountName)
+      return toast.error('Fill all bank fields')
+    setSaving(true)
+    try {
+      await axios.put('/api/credits/bank-info', form)
+      toast.success('Bank details updated!')
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to save')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="rounded-2xl border border-gray-100 bg-white shadow-sm overflow-hidden mt-2">
+      <div className="px-5 py-3 border-b border-gray-100 flex items-center gap-2">
+        <Building2 size={14} className="text-gray-400" />
+        <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Payment Account (Credit Top-ups)</p>
+      </div>
+      {loading ? (
+        <div className="px-5 py-6 flex justify-center"><Loader2 size={18} className="animate-spin text-gray-300" /></div>
+      ) : (
+        <div className="px-5 py-4 space-y-3">
+          <p className="text-xs text-gray-500">Students will see this account to pay for credits. Set your bank details below.</p>
+          {[
+            { key: 'bankName', label: 'Bank Name', placeholder: 'e.g. GTBank, Access Bank' },
+            { key: 'bankAccountNumber', label: 'Account Number', placeholder: '0123456789' },
+            { key: 'bankAccountName', label: 'Account Name', placeholder: 'AMACOS NEXUS Team' },
+          ].map(f => (
+            <div key={f.key}>
+              <label className="block text-xs font-medium text-gray-600 mb-1">{f.label}</label>
+              <input value={form[f.key]} onChange={e => setForm(p => ({ ...p, [f.key]: e.target.value }))}
+                placeholder={f.placeholder} style={{ fontSize: 14 }}
+                className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 transition" />
+            </div>
+          ))}
+          <button onClick={save} disabled={saving}
+            className="w-full bg-amber-400 hover:bg-amber-500 disabled:opacity-50 text-[#1a3c5e] font-bold py-2.5 rounded-xl text-sm transition">
+            {saving ? 'Saving…' : 'Save Bank Details'}
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ── Main ───────────────────────────────────────────────────────────────────────
 export default function Settings() {
   const { user, setUser } = useAuth()
@@ -546,6 +610,9 @@ export default function Settings() {
       {activeTab === 'profile'   && <ProfileTab user={user} setUser={setUser} />}
       {activeTab === 'staff'     && <StaffSettingsTab />}
       {activeTab === 'students'  && <StudentSettingsTab />}
+
+      {/* Payment / bank account (admins only) */}
+      {isAdmin && <BankSettingsCard />}
 
       {/* About this platform */}
       <div className="rounded-2xl border border-gray-100 bg-white shadow-sm overflow-hidden mt-2">

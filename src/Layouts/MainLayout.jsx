@@ -8,7 +8,7 @@ import {
   LayoutDashboard, BookOpen, FileQuestion, MessageSquare,
   Monitor, Compass, FlaskConical, Users, Bell, Shield,
   LogOut, Menu, X, ClipboardList,
-  GraduationCap, ChevronRight, Settings, ArrowLeft, ShieldCheck, Vote, Users2,
+  GraduationCap, ChevronRight, Settings, ArrowLeft, ShieldCheck, Vote, Users2, Coins,
 } from 'lucide-react'
 
 const navItems = [
@@ -23,6 +23,7 @@ const navItems = [
   { label: 'Alumni Network',  path: '/app/alumni',         icon: Users },
   { label: 'Elections',        path: '/app/elections',      icon: Vote },
   { label: 'Communities',     path: '/app/communities',    icon: Users2 },
+  { label: 'Wallet',          path: '/app/wallet',         icon: Coins },
   { label: 'Notifications',   path: '/app/notifications',  icon: Bell },
   { label: 'Staff Panel',     path: '/app/staff-panel',    icon: GraduationCap, staffOnly: true },
   { label: 'Student Panel',   path: '/app/student-panel',  icon: ShieldCheck,   studentAdminOnly: true },
