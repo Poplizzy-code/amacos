@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import axios from 'axios'
 import { useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { X, Send, Loader2, ChevronDown } from 'lucide-react'
+import { X, Send, Loader2, ChevronDown, Mic, MicOff } from 'lucide-react'
 
 // ── Buddy face ────────────────────────────────────────────────────────────────
 function BuddyFace({ mood = 'happy', size = 48, blink = false }) {
@@ -126,13 +126,84 @@ export default function BuddyWidget() {
   const [mood, setMood] = useState('happy')
   const [unread, setUnread] = useState(0)
 
+  const [listening, setListening] = useState(false)
+  // Drag position — stored as { bottom, right } offsets
+  const [pos, setPos] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('buddy_pos')) || { bottom: 80, right: 12 } }
+    catch { return { bottom: 80, right: 12 } }
+  })
+  const dragging = useRef(false)
+  const dragStart = useRef({})
+  const widgetRef = useRef()
+
   const feedMinutes = useRef(0)
   const feedTimer = useRef(null)
   const nudgeFired = useRef({})
   const messagesEndRef = useRef()
   const inputRef = useRef()
+  const recognitionRef = useRef(null)
 
   const userName = user?.fullName?.split(' ')[0] || 'boss'
+
+  // ── Drag ──────────────────────────────────────────────────────────────────
+  const onDragStart = (e) => {
+    dragging.current = true
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY
+    dragStart.current = { x: clientX, y: clientY, bottom: pos.bottom, right: pos.right }
+    e.preventDefault()
+  }
+  useEffect(() => {
+    const onMove = (e) => {
+      if (!dragging.current) return
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY
+      const dx = dragStart.current.x - clientX
+      const dy = dragStart.current.y - clientY
+      const newRight = Math.max(4, Math.min(window.innerWidth - 60, dragStart.current.right + dx))
+      const newBottom = Math.max(4, Math.min(window.innerHeight - 60, dragStart.current.bottom + dy))
+      setPos({ right: newRight, bottom: newBottom })
+    }
+    const onEnd = () => {
+      if (!dragging.current) return
+      dragging.current = false
+      setPos(p => { localStorage.setItem('buddy_pos', JSON.stringify(p)); return p })
+    }
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mouseup', onEnd)
+    window.addEventListener('touchmove', onMove, { passive: false })
+    window.addEventListener('touchend', onEnd)
+    return () => {
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('mouseup', onEnd)
+      window.removeEventListener('touchmove', onMove)
+      window.removeEventListener('touchend', onEnd)
+    }
+  }, [])
+
+  // ── Voice input ───────────────────────────────────────────────────────────
+  const toggleVoice = () => {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition
+    if (!SR) return toast?.error?.('Voice not supported on this browser')
+    if (listening) {
+      recognitionRef.current?.stop()
+      setListening(false)
+      return
+    }
+    const rec = new SR()
+    rec.lang = 'en-NG'
+    rec.continuous = false
+    rec.interimResults = false
+    rec.onresult = (e) => {
+      const transcript = e.results[0][0].transcript
+      setInput(prev => prev ? `${prev} ${transcript}` : transcript)
+    }
+    rec.onend = () => setListening(false)
+    rec.onerror = () => setListening(false)
+    recognitionRef.current = rec
+    rec.start()
+    setListening(true)
+  }
 
   // Blink every 4-6s
   useEffect(() => {
@@ -247,7 +318,8 @@ export default function BuddyWidget() {
 
   if (minimised) return (
     <button onClick={() => setMinimised(false)}
-      className="fixed bottom-20 right-4 z-50 flex items-center gap-2 bg-[#1a3c5e] text-white text-xs font-bold px-3 py-2 rounded-full shadow-lg">
+      className="fixed z-50 flex items-center gap-2 bg-[#1a3c5e] text-white text-xs font-bold px-3 py-2 rounded-full shadow-lg"
+      style={{ bottom: pos.bottom, right: pos.right }}>
       <BuddyFace size={20} mood="happy" />
       Buddy
       {unread > 0 && <span className="bg-red-500 text-white text-[10px] font-black w-4 h-4 rounded-full flex items-center justify-center">{unread}</span>}
@@ -255,7 +327,8 @@ export default function BuddyWidget() {
   )
 
   return (
-    <div className="fixed bottom-20 right-3 z-50 flex flex-col items-end gap-2" style={{ pointerEvents: 'none' }}>
+    <div ref={widgetRef} className="fixed z-50 flex flex-col items-end gap-2"
+      style={{ bottom: pos.bottom, right: pos.right, pointerEvents: 'none' }}>
 
       {/* Nudge bubble — shows when chat is closed */}
       {nudge && !open && (
@@ -322,13 +395,17 @@ export default function BuddyWidget() {
           </div>
 
           {/* Input */}
-          <div className="flex items-center gap-2 px-3 py-2.5 border-t border-gray-100 bg-white">
+          <div className="flex items-center gap-1.5 px-3 py-2.5 border-t border-gray-100 bg-white">
+            <button onClick={toggleVoice}
+              className={`w-7 h-7 flex items-center justify-center rounded-full flex-shrink-0 transition ${listening ? 'bg-red-500 text-white animate-pulse' : 'bg-gray-100 text-gray-400 hover:bg-gray-200'}`}>
+              {listening ? <MicOff size={12} /> : <Mic size={12} />}
+            </button>
             <input
               ref={inputRef}
               value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && !e.shiftKey && send()}
-              placeholder="Say something…"
+              placeholder={listening ? 'Listening…' : 'Say something…'}
               style={{ fontSize: 14 }}
               className="flex-1 text-sm text-gray-700 placeholder-gray-400 focus:outline-none bg-transparent"
             />
@@ -340,16 +417,18 @@ export default function BuddyWidget() {
         </div>
       )}
 
-      {/* Floating Buddy button */}
-      <div style={{ pointerEvents: 'auto', position: 'relative' }}>
+      {/* Floating Buddy button — drag to move, tap to open */}
+      <div style={{ pointerEvents: 'auto', position: 'relative', touchAction: 'none' }}>
         {unread > 0 && !open && (
           <span className="absolute -top-1 -right-1 z-10 w-5 h-5 bg-red-500 text-white text-[10px] font-black rounded-full flex items-center justify-center shadow">
             {unread}
           </span>
         )}
         <button
-          onClick={() => { setOpen(o => !o); setNudge(null) }}
-          className="transition-transform hover:scale-110 active:scale-95"
+          onMouseDown={onDragStart}
+          onTouchStart={onDragStart}
+          onClick={() => { if (!dragging.current) { setOpen(o => !o); setNudge(null) } }}
+          className="transition-transform hover:scale-110 active:scale-95 cursor-grab active:cursor-grabbing"
           style={{
             animation: nudge && !open ? 'buddyBounce 0.6s ease infinite alternate' : 'buddyIdle 3s ease-in-out infinite',
           }}
